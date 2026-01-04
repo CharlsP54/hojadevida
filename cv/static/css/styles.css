@@ -1,0 +1,366 @@
+
+ :root{
+  --ink:#0f172a;
+  --muted:#475569;
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --line:#e2e8f0;
+  --accent:#2563eb;
+  --chip:#eef2ff;
+}
+
+body{
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.cv-wrap{ max-width: 1120px; }
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(2,6,23,.06);
+}
+
+.muted{ color: var(--muted); }
+
+
+
+.no-clamp{ overflow: visible !important; display:block !important; }
+
+
+.desc{
+  margin-top: .75rem;
+  padding: .75rem .9rem;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px dashed var(--line);
+  color: var(--ink);
+  line-height: 1.45;
+}
+.desc .label{
+  display:block;
+  font-size: .78rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: .35rem;
+}
+
+
+.kv{
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: .45rem 1rem;
+  margin-top: .9rem;
+}
+
+.kv .k{
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #64748b; 
+}
+
+.kv .v{
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a; 
+}
+
+
+.desc{
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  background: #f1f5f9;
+  border-left: 4px solid var(--accent);
+  line-height: 1.55;
+}
+
+.desc .label{
+  display: block;
+  margin-bottom: .4rem;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.item .fw-semibold{
+  font-size: .75rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: .25rem;
+}
+
+
+.item .muted{
+  color: #0f172a !important;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+
+.item .muted a{
+  font-weight: 800;
+  color: var(--accent);
+  text-decoration: none;
+}
+.item .muted a:hover{ text-decoration: underline; }
+
+
+
+/* tipografia */
+body{
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 16px;
+}
+
+h2, h3, h4, h5, h6{
+  letter-spacing: -0.02em;
+}
+
+.hero h2{
+  font-weight: 800;
+  font-size: 1.7rem;
+}
+
+
+/* títulos de sección */
+.section-title{
+  font-weight: 900;
+  font-size: .78rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+
+.item{
+  border-radius: 14px;
+}
+
+/* fechas */
+.date-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.35rem .65rem;
+  border-radius: 999px;
+  background: #eef2ff;
+  border: 1px solid #dbeafe;
+  font-weight: 800;
+  font-size: .9rem;
+  color: #1e3a8a;
+  white-space: nowrap;
+}
+.date-badge .muted{
+  color:#1e3a8a !important;
+  font-weight: 800;
+}
+
+/* descripcion */
+.desc{
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid var(--accent);
+}
+.desc .label{
+  color: var(--accent);
+}
+
+/* navegacion  */
+.nav-list{
+  display: grid;
+  gap: .5rem;
+}
+
+.nav-link-soft{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.75rem;
+  padding: .75rem .9rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  text-decoration:none;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.nav-link-soft:hover{
+  background:#f8fafc;
+  border-color:#cbd5e1;
+}
+
+.nav-link-soft .left{
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+}
+
+.nav-link-soft .pill{
+  font-size:.75rem;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#64748b;
+  background:#f1f5f9;
+  border:1px solid #e2e8f0;
+  padding:.25rem .5rem;
+  border-radius:999px;
+}
+
+.avatar-xl{
+  width: 120px;
+  height: 120px;
+  border-radius: 22px;
+  object-fit: cover;
+
+  border: 2px solid #ffffff;
+  outline: 1px solid var(--line);
+
+  box-shadow:
+    0 12px 30px rgba(2,6,23,.10),
+    0 0 0 4px rgba(37,99,235,.06);
+
+  background: #fff;
+  flex: 0 0 auto;
+}
+
+
+.avatar-placeholder{
+  width: 120px;
+  height: 120px;
+  border-radius: 22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  flex: 0 0 auto;
+}
+
+.actions{
+  margin-top: .75rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.actions:empty{
+  display: none;
+}
+
+.actions:empty{ display:none; }
+
+
+/* modo impresion y formato */
+@media print {
+
+
+  .print-hide,
+  .nav-list,
+  .actions{
+    display: none !important;
+  }
+
+  /* Fondo limpio */
+  body{
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  /* Quitar efecto tarjetas */
+  .card{
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Hero más compacto */
+  .hero{
+    padding: 0 !important;
+    margin-bottom: 1rem !important;
+    border: none !important;
+  }
+
+  /* Avatar más pequeño en PDF */
+  .avatar-xl{
+    width: 90px !important;
+    height: 90px !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  /* Títulos más sobrios */
+  h2{
+    font-size: 1.4rem !important;
+  }
+
+  h5, h6{
+    font-size: 1rem !important;
+  }
+
+  /* Descripciones sin cajas */
+  .desc{
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-top: .4rem !important;
+  }
+
+  .desc .label{
+    font-size: .7rem !important;
+    color: #000 !important;
+  }
+
+  .col-lg-4{
+    width: 33% !important;
+    float: left !important;
+    padding-right: 14px !important; /* aire entre columnas */
+  }
+
+  .col-lg-8{
+    width: 67% !important;
+    float: right !important;
+    padding-left: 14px !important; /* aire entre columnas */
+  }
+
+  /* Más espacio vertical entre bloques */
+  .item{
+    margin-bottom: 10px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid #eee !important; /* separador suave */
+  }
+
+  /* Kv más compacto pero legible */
+  .kv{
+    grid-template-columns: 120px 1fr !important;
+    gap: 6px 12px !important;
+    margin-top: 6px !important;
+  }
+
+  /* Evitar badges gigantes (comen espacio) */
+  .date-badge{
+    padding: 2px 8px !important;
+    font-size: .82rem !important;
+  }
+
+  /* Evitar bloques de descripción muy apretados */
+  .desc{
+    margin-top: 6px !important;
+  }
+}
