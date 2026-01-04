@@ -5,3 +5,4 @@ from django.apps import apps
 
 for model in apps.get_app_config("cv").get_models():
     admin.site.register(model)
+

@@ -22,17 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY", default="dev-secret-key")
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-# ALLOWED_HOSTS como lista desde .env (separado por comas)
-ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS",
-    default="127.0.0.1,localhost"
-).split(",")
 
-# Limpia espacios por si acaso: "localhost, 127.0.0.1"
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost").split(",")
 ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS if h.strip()]
 
 
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="").split(",")
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in CSRF_TRUSTED_ORIGINS if o.strip()]
+
+
 # Apps
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -45,9 +45,9 @@ INSTALLED_APPS = [
 
 
 # Middleware
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    # Whitenoise SOLO si lo tienes instalado y lo vas a usar
     "whitenoise.middleware.WhiteNoiseMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -63,7 +63,7 @@ ROOT_URLCONF = "hojadevida.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],  # opcional pero útil si tienes templates globales
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -79,17 +79,23 @@ WSGI_APPLICATION = "hojadevida.wsgi.application"
 
 
 # Base de datos
+
 DATABASE_URL = config(
     "DATABASE_URL",
     default="postgres://postgres:postgres123@localhost:5432/x"
 )
 
 DATABASES = {
-    "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    "default": dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=not DEBUG  # en producción fuerza SSL si el proveedor lo soporta
+    )
 }
 
 
-# Password validators
+# Validación de passwords
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -99,21 +105,61 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internacionalización
+
 LANGUAGE_CODE = "es"
 TIME_ZONE = "America/Guayaquil"
 USE_I18N = True
 USE_TZ = True
 
-# Para que meses/días salgan en español en los templates
-USE_L10N = True
 
 
-# Static files
+
+# Static files 
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Esto ayuda a servir estáticos en producción (Azure/Render)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# Si usas media (subidas), en Azure App Service NO es persistente sin Storage.
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Ajustes 
+
+if not DEBUG:
+    
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    
+    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
+
+  
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+  
+    SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=60, cast=int)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Hardening básico
+    X_FRAME_OPTIONS = "DENY"
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = "same-origin"
+
+    # Logging básico 
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {"class": "logging.StreamHandler"},
+        },
+        "root": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+    }

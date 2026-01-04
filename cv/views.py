@@ -62,7 +62,8 @@ def instance_to_kv(obj, exclude=None):
 
 def mi_cv(request):
 
-    perfil = Datospersonales.objects.order_by("-idperfil").first()
+    perfil = Datospersonales.objects.filter(perfilactivo=1).first()
+
 
     if not perfil:
         return render(request, "sin_datos.html")

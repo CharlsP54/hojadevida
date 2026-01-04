@@ -24,7 +24,7 @@ class Cursosrealizados(models.Model):
     rutacertificado = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'cursosrealizados'
 
 
@@ -51,7 +51,7 @@ class Datospersonales(models.Model):
         return f"{self.nombres} {self.apellidos}"
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'datospersonales'
 
 
@@ -72,7 +72,7 @@ class Experiencialaboral(models.Model):
     rutacertificado = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'experiencialaboral'
 
 
@@ -85,7 +85,7 @@ class Productosacademicos(models.Model):
     activarparaqueseveaenfront = models.BooleanField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'productosacademicos'
 
 
@@ -98,7 +98,7 @@ class Productoslaborales(models.Model):
     activarparaqueseveaenfront = models.BooleanField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'productoslaborales'
 
 
@@ -135,7 +135,7 @@ class Reconocimientos(models.Model):
     rutacertificado = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'reconocimientos'
 
 
