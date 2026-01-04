@@ -61,7 +61,7 @@ def instance_to_kv(obj, exclude=None):
 
 
 def mi_cv(request):
-    # último perfil (tu CV)
+
     perfil = Datospersonales.objects.order_by("-idperfil").first()
 
     if not perfil:
@@ -70,8 +70,7 @@ def mi_cv(request):
 
     perfil_id = perfil.idperfil
 
-    # NOTA: en tus modelos, casi todos son FK a Datospersonales,
-    # excepto Reconocimientos (ahí es IntegerField).
+
     experiencias = Experiencialaboral.objects.filter(
         idperfilconqueestaactivo=perfil,  # FK
         activarparaqueseveaenfront=True

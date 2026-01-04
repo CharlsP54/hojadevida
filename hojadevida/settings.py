@@ -16,9 +16,9 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# =========================
+
 # Seguridad / Entorno
-# =========================
+
 SECRET_KEY = config("SECRET_KEY", default="dev-secret-key")
 DEBUG = config("DEBUG", default=True, cast=bool)
 
@@ -31,9 +31,8 @@ ALLOWED_HOSTS = config(
 # Limpia espacios por si acaso: "localhost, 127.0.0.1"
 ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS if h.strip()]
 
-# =========================
+
 # Apps
-# =========================
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -44,9 +43,8 @@ INSTALLED_APPS = [
     "cv",
 ]
 
-# =========================
+
 # Middleware
-# =========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     # Whitenoise SOLO si lo tienes instalado y lo vas a usar
@@ -79,10 +77,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "hojadevida.wsgi.application"
 
-# =========================
+
 # Base de datos
-# =========================
-# Usa DATABASE_URL si existe; si no, usa tu postgres local
 DATABASE_URL = config(
     "DATABASE_URL",
     default="postgres://postgres:postgres123@localhost:5432/x"
@@ -92,9 +88,8 @@ DATABASES = {
     "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
 }
 
-# =========================
+
 # Password validators
-# =========================
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -102,9 +97,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# =========================
+
 # Internacionalización
-# =========================
 LANGUAGE_CODE = "es"
 TIME_ZONE = "America/Guayaquil"
 USE_I18N = True
@@ -113,9 +107,9 @@ USE_TZ = True
 # Para que meses/días salgan en español en los templates
 USE_L10N = True
 
-# =========================
+
 # Static files
-# =========================
+
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
