@@ -1,13 +1,15 @@
 #!/bin/bash
 set -e
 
+echo "== Instalando dependencias =="
 python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 
-# Migra (opcional hacerlo automático; yo lo dejo porque te evita sustos)
+echo "== Migraciones =="
 python manage.py migrate --noinput
 
-# Static (WhiteNoise necesita esto)
+echo "== Static =="
 python manage.py collectstatic --noinput
 
-# Arranque
-gunicorn hojadevida.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120
+echo "== Arrancando Gunicorn =="
+gunicorn hojadevida.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120
