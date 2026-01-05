@@ -3,7 +3,7 @@ set -e
 
 cd /home/site/wwwroot
 
-echo "==> Python:"
+echo "==> Python version"
 python3 --version
 
 echo "==> Upgrade pip"
