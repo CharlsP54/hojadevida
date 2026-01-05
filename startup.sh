@@ -5,8 +5,6 @@ cd /home/site/wwwroot
 
 echo "==> Python:"
 python --version
-echo "==> Pip:"
-python -m pip --version
 
 echo "==> Upgrade pip"
 python -m pip install --upgrade pip
