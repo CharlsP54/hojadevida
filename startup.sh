@@ -1,24 +1,17 @@
 #!/bin/bash
 set -e
 
-echo "==> Entrando a /home/site/wwwroot"
-cd /home/site/wwwroot
-
-echo "==> Mostrando archivos"
+echo "📁 Contenido de wwwroot:"
 ls -la
 
-# Si tu manage.py NO está en /home/site/wwwroot, descomenta y ajusta:
-# cd hojadevida
+# Si manage.py está en una subcarpeta, AJUSTA este cd
+# Ejemplo: cd backend
+# Ejemplo: cd hojadevida
+cd .
 
-echo "==> Instalando dependencias"
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+echo "🚀 Iniciando Gunicorn..."
 
-echo "==> Migraciones"
-python manage.py migrate --noinput
-
-echo "==> Collectstatic"
-python manage.py collectstatic --noinput
-
-echo "==> Arrancando Gunicorn"
-gunicorn hojadevida.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120
+gunicorn NOMBRE_REAL_DEL_PROYECTO.wsgi:application \
+  --bind 0.0.0.0:${PORT:-8000} \
+  --workers 2 \
+  --timeout 120
