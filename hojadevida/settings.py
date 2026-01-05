@@ -84,14 +84,14 @@ WSGI_APPLICATION = "hojadevida.wsgi.application"
 
 DATABASE_URL = config(
     "DATABASE_URL",
-    default="postgres://postgres:postgres123@localhost:5432/x"
+    default="postgresql://postgres:postgres123@localhost:5432/x"
 )
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=config("DATABASE_URL"),
+    "default": dj_database_url.parse(
+        DATABASE_URL,
         conn_max_age=600,
-        ssl_require=True,
+        ssl_require=not DEBUG,
     )
 }
 

@@ -4,22 +4,22 @@ set -e
 cd /home/site/wwwroot
 
 echo "==> Python:"
-python --version
+python3 --version
 
 echo "==> Upgrade pip"
-python -m pip install --upgrade pip
+python3 -m pip install --upgrade pip
 
 echo "==> Install requirements"
-python -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 
 echo "==> Check Django"
-python -c "import django; print('Django OK:', django.get_version())"
+python3 -c "import django; print('Django OK:', django.get_version())"
 
 echo "==> Migrate"
-python manage.py migrate --noinput
+python3 manage.py migrate --noinput
 
 echo "==> Collectstatic"
-python manage.py collectstatic --noinput
+python3 manage.py collectstatic --noinput
 
 echo "==> Start gunicorn"
 exec gunicorn hojadevida.wsgi:application \
