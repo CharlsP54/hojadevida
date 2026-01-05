@@ -22,3 +22,7 @@ urlpatterns = [
     path("", include("cv.urls")),
 ]
 
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS",
+    default="*"
+).split(",")
