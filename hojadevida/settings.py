@@ -20,15 +20,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Seguridad / Entorno
 
 SECRET_KEY = config("SECRET_KEY", default="dev-secret-key")
-DEBUG = config("DEBUG", default=True, cast=bool)
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost").split(",")
+
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
 ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS if h.strip()]
 
 
 CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="").split(",")
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in CSRF_TRUSTED_ORIGINS if o.strip()]
+
 
 
 # Apps
@@ -86,10 +88,10 @@ DATABASE_URL = config(
 )
 
 DATABASES = {
-    "default": dj_database_url.parse(
-        DATABASE_URL,
+    "default": dj_database_url.config(
+        default=config("DATABASE_URL"),
         conn_max_age=600,
-        ssl_require=not DEBUG  # en producción fuerza SSL si el proveedor lo soporta
+        ssl_require=True,
     )
 }
 
