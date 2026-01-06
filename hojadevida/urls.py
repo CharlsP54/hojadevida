@@ -21,8 +21,3 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("cv.urls")),
 ]
-
-ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS",
-    default="*"
-).split(",")
