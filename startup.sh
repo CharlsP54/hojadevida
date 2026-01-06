@@ -1,25 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-cd /home/site/wwwroot
-
-echo "==> Python version"
-python3 --version
-
-echo "==> Upgrade pip"
-python3 -m pip install --upgrade pip
-
-echo "==> Install requirements"
-python3 -m pip install -r requirements.txt
-
-echo "==> Check Django"
-python3 -c "import django; print('Django OK:', django.get_version())"
-
 echo "==> Migrate"
-python3 manage.py migrate --noinput
+python manage.py migrate --noinput
 
 echo "==> Collectstatic"
-python3 manage.py collectstatic --noinput
+python manage.py collectstatic --noinput
 
 echo "==> Start gunicorn"
 exec gunicorn hojadevida.wsgi:application \
