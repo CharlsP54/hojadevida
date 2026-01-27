@@ -2,8 +2,7 @@
 
 echo "--- INICIANDO INSTALACIÓN DE DEPENDENCIAS ---"
 
-# 1. Instalar librerías gráficas (WeasyPrint lo necesita OBLIGATORIAMENTE)
-# Usamos -qq para que no llene el log de texto basura
+# 1. Instalar librerías gráficas
 apt-get update -qq
 apt-get install -y -qq libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info libcairo2
 
@@ -17,6 +16,6 @@ python manage.py migrate
 echo "==> Recolectando estáticos..."
 python manage.py collectstatic --noinput
 
-# 4. Iniciar Gunicorn
+# 4. Iniciar Gunicorn (CON EL PUERTO 8000 AGREGADO)
 echo "==> Arrancando servidor..."
-gunicorn --bind=0.0.0.0 --timeout 600 hojadevida.wsgi
+gunicorn --bind=0.0.0.0:8000 --timeout 600 hojadevida.wsgi
