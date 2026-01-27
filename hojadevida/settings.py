@@ -119,7 +119,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # CAMBIO IMPORTANTE: Usamos CompressedStaticFilesStorage
 # La versión "Manifest" da error 500 si falta algún archivo referenciado. Esta es más segura.
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
+
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
