@@ -1,131 +1,131 @@
-from django.shortcuts import render
-from django.http import Http404
-from datetime import date, datetime
+import io
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from pypdf import PdfWriter
 
+# Importar tus modelos
 from .models import (
-    Datospersonales,
-    Experiencialaboral,
-    Cursosrealizados,
-    Productosacademicos,
-    Productoslaborales,
-    Reconocimientos,
+    Datospersonales, 
+    Experiencialaboral, 
+    Cursosrealizados, 
+    Reconocimientos, 
+    Productosacademicos, 
+    Productoslaborales, 
+    Ventagarage
 )
-HUMAN_LABELS = {
-    "descripcionperfil": "Descripción del perfil",
-    "perfilactivo": "Perfil activo",
-    "apellidos": "Apellidos",
-    "nombres": "Nombres",
-    "nacionalidad": "Nacionalidad",
-    "lugarnacimiento": "Lugar de nacimiento",
-    "fechanacimiento": "Fecha de nacimiento",
-    "numerocedula": "Número de cédula",
-    "sexo": "Sexo",
-    "estadocivil": "Estado civil",
-    "licenciaconducir": "Licencia de conducir",
-    "telefonoconvencional": "Teléfono convencional",
-    "telefonofijo": "Teléfono móvil",
-    "direcciontrabajo": "Dirección de trabajo",
-    "direcciondomiciliaria": "Dirección domiciliaria",
-    "sitioweb": "Sitio web",
-}
 
-def instance_to_kv(obj, exclude=None):
-    """
-    Convierte un modelo en lista de (Label, Value) SOLO para campos no vacíos.
-    Esto evita hardcodear campos en el HTML y hace que se vea TODO lo que llenaste.
-    """
-    exclude = set(exclude or [])
-    kv = []
-
-    for f in obj._meta.fields:
-        name = f.name
-        if name in exclude:
-            continue
-
-        value = getattr(obj, name, None)
-
-        # ignora vacíos
-        if value is None:
-            continue
-        if isinstance(value, str) and not value.strip():
-            continue
-
-        # formato simple para fechas
-        if isinstance(value, (date, datetime)):
-            value = value.strftime("%Y-%m-%d")
-
-        label = HUMAN_LABELS.get(name, name.replace("_", " ").title())
-        kv.append((label, value))
-
-    return kv
-
-
-def mi_cv(request):
-
+# =========================================
+# 1. VISTA HOME
+# =========================================
+def home(request):
+    # Busca el primer perfil activo
     perfil = Datospersonales.objects.filter(perfilactivo=1).first()
-
-
+    
     if not perfil:
-        return render(request, "sin_datos.html")
+        # Si no hay activos, trae el primero que exista
+        perfil = Datospersonales.objects.first()
+    
+    if perfil:
+        # Redirige usando el nombre 'cv_detail' que definimos en urls.py
+        return redirect('cv_detail', idperfil=perfil.idperfil)
+    else:
+        return HttpResponse("<h1>No hay perfiles creados en la Base de Datos.</h1>")
 
-
-    perfil_id = perfil.idperfil
-
-
-    experiencias = Experiencialaboral.objects.filter(
-        idperfilconqueestaactivo=perfil,  # FK
-        activarparaqueseveaenfront=True
-    ).order_by("-fechainiciogestion")
-
-    cursos = Cursosrealizados.objects.filter(
-        idperfilconqueestaactivo=perfil,  # FK
-        activarparaqueseveaenfront=True
-    ).order_by("-fechafin")
-
-    productos_academicos = Productosacademicos.objects.filter(
-        idperfilconqueestaactivo=perfil,  # FK
-        activarparaqueseveaenfront=True
-    ).order_by('-idproductoacademico')
-
-    productos_laborales = Productoslaborales.objects.filter(
-        idperfilconqueestaactivo=perfil,  # FK
-        activarparaqueseveaenfront=True
-    )
-
-    reconocimientos = Reconocimientos.objects.filter(
-        idperfilconqueestaactivo=perfil,  # FK al perfil
-        activarparaqueseveaenfront=True
-    ).order_by("-fechareconocimiento")
-
-    # excluir campos “técnicos” (IDs / flags)
-    EXCLUDE_TECH = {
-        "idperfilconqueestaactivo",
-        "activarparaqueseveaenfront",
-        "idperfil",
-        "idcursorealizado",
-        "idexperiencilaboral",
-        "idproductoacademico",
-        "idproductoslaborales",
-        "idreconocimiento",
-    }
+# =========================================
+# 2. VISTA DASHBOARD WEB (RENOMBRADA)
+# =========================================
+# ANTES SE LLAMABA perfil_detail, AHORA ES cv_detail PARA COINCIDIR CON URLS.PY
+def cv_detail(request, idperfil): 
+    perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
+    
+    # Consultas
+    experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil)
+    cursos = Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil)
+    reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil)
+    productos_academicos = Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil)
+    productos_laborales = Productoslaborales.objects.filter(idperfilconqueestaactivo=perfil)
+    ventas_garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil)
 
     context = {
-        "perfil": perfil,
+        'perfil': perfil,
+        'experiencias': experiencias,
+        'cursos': cursos,
+        'reconocimientos': reconocimientos,
+        'productos_academicos': productos_academicos,
+        'productos_laborales': productos_laborales,
+        'ventas_garage': ventas_garage,
+    }
+    
+    return render(request, 'perfil_detail.html', context)
 
-        "experiencias": experiencias,
-        "cursos": cursos,
-        "productos_academicos": productos_academicos,
-        "productos_laborales": productos_laborales,
-        "reconocimientos": reconocimientos,
+# =========================================
+# 3. VISTA PDF FUSIONADO
+# =========================================
+def cv_print(request, idperfil):
+    perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
+    
+    # 1. Filtros
+    show_exp = request.GET.get('exp', 'on') == 'on'
+    show_edu = request.GET.get('edu', 'on') == 'on'
+    show_acad = request.GET.get('acad', 'on') == 'on'
+    show_lab = request.GET.get('lab', 'on') == 'on'
+    show_rec = request.GET.get('rec', 'on') == 'on'
+    show_garage = request.GET.get('garage') == 'on'
 
-        # “detalles completos” (para que el HTML muestre TODO lo no vacío)
-        "perfil_kv": instance_to_kv(perfil, exclude={"idperfil"}),
+    # 2. Querysets
+    experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil) if show_exp else []
+    cursos = Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil) if show_edu else []
+    reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil) if show_rec else []
+    productos_academicos = Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil) if show_acad else []
+    productos_laborales = Productoslaborales.objects.filter(idperfilconqueestaactivo=perfil) if show_lab else []
+    ventas_garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil) if show_garage else []
 
-        "exp_det": [(e, instance_to_kv(e, exclude=EXCLUDE_TECH)) for e in experiencias],
-        "cur_det": [(c, instance_to_kv(c, exclude=EXCLUDE_TECH)) for c in cursos],
-        "pa_det":  [(p, instance_to_kv(p, exclude=EXCLUDE_TECH)) for p in productos_academicos],
-        "pl_det":  [(p, instance_to_kv(p, exclude=EXCLUDE_TECH)) for p in productos_laborales],
-        "rec_det": [(r, instance_to_kv(r, exclude=EXCLUDE_TECH)) for r in reconocimientos],
+    context = {
+        'perfil': perfil,
+        'experiencias': experiencias,
+        'cursos': cursos,
+        'reconocimientos': reconocimientos,
+        'productos_academicos': productos_academicos,
+        'productos_laborales': productos_laborales,
+        'ventas_garage': ventas_garage,
     }
 
-    return render(request, "perfil_detail.html", context)
+    # 3. Generar PDF Base
+    html_string = render_to_string('cv_print.html', context)
+    base_url = request.build_absolute_uri('/')
+    html = HTML(string=html_string, base_url=base_url)
+    
+    cv_buffer = io.BytesIO()
+    html.write_pdf(target=cv_buffer)
+    cv_buffer.seek(0)
+
+    # 4. Fusión con PyPDF
+    merger = PdfWriter()
+    merger.append(cv_buffer)
+
+    def anexar_certificados(queryset):
+        for item in queryset:
+            if item.archivo_digital:
+                try:
+                    if item.archivo_digital.name.lower().endswith('.pdf'):
+                        merger.append(item.archivo_digital.path)
+                except Exception as e:
+                    print(f"Error anexando certificado: {e}")
+
+    if show_edu: anexar_certificados(cursos)
+    if show_exp: anexar_certificados(experiencias)
+    if show_rec: anexar_certificados(reconocimientos)
+
+    # 5. Salida
+    output_buffer = io.BytesIO()
+    merger.write(output_buffer)
+    merger.close()
+    
+    output_buffer.seek(0)
+    response = HttpResponse(output_buffer, content_type='application/pdf')
+    filename = f"CV_{perfil.nombres}.pdf"
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    
+    return response

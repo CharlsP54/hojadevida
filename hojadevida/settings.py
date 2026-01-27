@@ -151,6 +151,13 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
+# --- Esto evita que Django te pida migraciones del app cv ---
+# (porque tus modelos están managed=False y la BD ya existe)
+
+MIGRATION_MODULES = {"cv": None}
+
+
 # =========================
 # Seguridad en producción (Azure)
 # =========================
@@ -165,7 +172,7 @@ if IN_AZURE and not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-    X_FRAME_OPTIONS = "DENY"
+    X_FRAME_OPTIONS = "SAMEORIGIN"
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = "same-origin"
 

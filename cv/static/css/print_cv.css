@@ -1,0 +1,151 @@
+/* CONFIGURACIÓN DE LA HOJA FÍSICA */
+@page {
+    size: A4;
+    margin: 0;
+}
+
+/* IMPORTANTE: Para que el padding no aumente el ancho total y rompa las columnas */
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --accent: #1e3a8a; /* Azul Navy */
+    --text: #334155;
+    --dark: #0f172a;
+    --light-bg: #f8fafc;
+}
+
+/* ESTILO "VISOR DE DOCUMENTOS" */
+body {
+    background-color: #525659;
+    margin: 0;
+    padding: 40px 0;
+    /* Forzamos la fuente en todo el documento para evitar Times New Roman */
+    font-family: 'Inter', Helvetica, Arial, sans-serif; 
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* Asegurar que los títulos usen la misma fuente */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', Helvetica, Arial, sans-serif;
+    margin: 0;
+}
+
+.page-container {
+    background: white;
+    width: 210mm;      /* ANCHO A4 */
+    min-height: 297mm; /* ALTO A4 */
+    display: flex;     /* Flexbox para las 2 columnas */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden; /* Evita desbordamientos */
+}
+
+/* LÓGICA DE IMPRESIÓN */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+        display: block;
+    }
+    .page-container {
+        box-shadow: none;
+        width: 100%;
+        margin: 0;
+        min-height: 297mm;
+    }
+}
+
+/* --- COLUMNA IZQUIERDA --- */
+.sidebar {
+    width: 70mm;
+    background-color: var(--light-bg);
+    padding: 15mm 5mm; /* Reduje un poco el padding lateral para dar espacio */
+    border-right: 1px solid #e2e8f0;
+    flex-shrink: 0; /* Evita que se encoja */
+}
+
+.profile-img {
+    width: 40mm;
+    height: 40mm;
+    object-fit: cover;
+    border-radius: 12px;
+    margin: 0 auto 20px auto; /* Centrado */
+    display: block;
+    border: 3px solid white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.sidebar-block { margin-bottom: 25px; }
+
+.sidebar-block h3 {
+    font-size: 9pt;
+    color: var(--accent);
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 5px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.sidebar-block p, .sidebar-block a { 
+    font-size: 8.5pt; 
+    margin: 4px 0; 
+    color: var(--text); 
+    text-decoration: none;
+    display: block;
+}
+
+/* CLASE PARA ARREGLAR LA URL LARGA */
+.break-link {
+    word-break: break-all; /* Corta la URL en cualquier caracter */
+    word-wrap: break-word;
+    font-size: 8pt; /* Un pelín más pequeño ayuda */
+    line-height: 1.2;
+}
+
+.mini-entry { margin-bottom: 10px; }
+.small-title { font-weight: bold; color: var(--dark); font-size: 8.5pt; }
+.small-sub { font-size: 7.5pt; color: #64748b; }
+
+/* --- COLUMNA DERECHA --- */
+.main-content {
+    width: 140mm;
+    padding: 15mm 10mm;
+    background: white;
+    flex-grow: 1;
+}
+
+.header h1 { 
+    font-size: 22pt; 
+    color: var(--dark); 
+    line-height: 1.1; 
+    text-transform: uppercase;
+}
+.subtitle { font-size: 11pt; color: var(--accent); font-weight: bold; margin-top: 5px; }
+
+.main-block { margin-top: 25px; }
+
+.section-title {
+    font-size: 11pt;
+    color: var(--dark);
+    font-weight: bold;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 5px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.experience-entry { margin-bottom: 15px; page-break-inside: avoid; }
+.exp-header { display: flex; justify-content: space-between; align-items: baseline; }
+.role { font-weight: bold; font-size: 10.5pt; color: var(--dark); }
+.date { font-size: 8.5pt; color: var(--accent); font-weight: bold; text-align: right; min-width: 80px;}
+.company { font-weight: bold; color: #475569; font-size: 9pt; margin-bottom: 4px; }
+.exp-desc { font-size: 9pt; text-align: justify; margin: 0; color: var(--text); line-height: 1.4; }
+
+/* Estilo para listas dentro de la descripción */
+.clean-list { padding-left: 15px; margin: 5px 0; }
+.clean-list li { margin-bottom: 4px; color: var(--text); font-size: 9pt; }
