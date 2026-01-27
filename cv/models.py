@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.utils.timezone import now
 from datetime import date
 
 # =========================
@@ -25,15 +24,18 @@ class CleanSaveMixin(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
-        self.full_clean() # Esto dispara las validaciones
+        self.full_clean()  # Dispara validaciones
         return super().save(*args, **kwargs)
 
 # =========================
-# MODELOS
+# MODELOS (CORREGIDOS PARA BD NUEVA)
+# - PKs autoincrementales (BigAutoField)
+# - managed=True para que Django cree/actualice tablas con migraciones
 # =========================
 
 class Datospersonales(CleanSaveMixin, models.Model):
-    idperfil = models.IntegerField(primary_key=True)
+    idperfil = models.BigAutoField(primary_key=True)
+
     descripcionperfil = models.CharField(max_length=50, blank=True, null=True)
     perfilactivo = models.IntegerField(blank=True, null=True)
     apellidos = models.CharField(max_length=60, blank=True, null=True)
@@ -51,8 +53,9 @@ class Datospersonales(CleanSaveMixin, models.Model):
     direcciondomiciliaria = models.CharField(max_length=50, blank=True, null=True)
     sitioweb = models.CharField(max_length=60, blank=True, null=True)
     foto_perfil_url = models.URLField(blank=True, null=True)
+
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
-    
+
     # Switches
     mostrar_experiencia = models.BooleanField(default=True)
     mostrar_cursos = models.BooleanField(default=True)
@@ -71,7 +74,8 @@ class Datospersonales(CleanSaveMixin, models.Model):
 
 
 class Experiencialaboral(CleanSaveMixin, models.Model):
-    idexperiencilaboral = models.IntegerField(primary_key=True)
+    idexperiencilaboral = models.BigAutoField(primary_key=True)
+
     cargodesempenado = models.CharField(max_length=100, blank=True, null=True)
     nombrempresa = models.CharField(max_length=50, blank=True, null=True)
     lugarempresa = models.CharField(max_length=50, blank=True, null=True)
@@ -82,32 +86,46 @@ class Experiencialaboral(CleanSaveMixin, models.Model):
     fechainiciogestion = models.DateField(blank=True, null=True)
     fechafingestion = models.DateField(blank=True, null=True)
     descripcionfunciones = models.CharField(max_length=100, blank=True, null=True)
+
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
-    
-    # LINK EXTERNO
+
+    # Link externo (opcional)
     rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
-    
-    # NUEVO: ARCHIVO (PDF/IMG)
-    archivo_digital = models.FileField(upload_to='certificados/experiencia/', blank=True, null=True, verbose_name="Subir PDF/Imagen")
-    
+
+    # Archivo (PDF/IMG)
+    archivo_digital = models.FileField(
+        upload_to="certificados/experiencia/",
+        blank=True,
+        null=True,
+        verbose_name="Subir PDF/Imagen",
+    )
+
     idperfilconqueestaactivo = models.ForeignKey(
-        Datospersonales, models.DO_NOTHING, db_column="idperfilconqueestaactivo", blank=True, null=True, related_name="experiencias"
+        Datospersonales,
+        on_delete=models.CASCADE,  # recomendado para BD nueva
+        db_column="idperfilconqueestaactivo",
+        blank=True,
+        null=True,
+        related_name="experiencias",
     )
 
     def clean(self):
-        if self.fechainiciogestion: validar_no_futuro(self.fechainiciogestion)
-        if self.fechafingestion: validar_no_futuro(self.fechafingestion)
-        if self.fechafingestion and self.fechainiciogestion:
+        if self.fechainiciogestion:
+            validar_no_futuro(self.fechainiciogestion)
+        if self.fechafingestion:
+            validar_no_futuro(self.fechafingestion)
+        if self.fechainiciogestion and self.fechafingestion:
             validar_rango_fechas(self.fechainiciogestion, self.fechafingestion)
 
     class Meta:
         db_table = "experiencialaboral"
         managed = True
-        ordering = ['-fechainiciogestion']
+        ordering = ["-fechainiciogestion"]
 
 
 class Cursosrealizados(CleanSaveMixin, models.Model):
-    idcursorealizado = models.IntegerField(primary_key=True)
+    idcursorealizado = models.BigAutoField(primary_key=True)
+
     nombrecurso = models.CharField(max_length=100, blank=True, null=True)
     fechainicio = models.DateField(blank=True, null=True)
     fechafin = models.DateField(blank=True, null=True)
@@ -117,48 +135,69 @@ class Cursosrealizados(CleanSaveMixin, models.Model):
     nombrecontactoauspicia = models.CharField(max_length=100, blank=True, null=True)
     telefonocontactoauspicia = models.CharField(max_length=60, blank=True, null=True)
     emailempresapatrocinadora = models.CharField(max_length=60, blank=True, null=True)
+
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
-    
-    # LINK EXTERNO
+
     rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
-    
-    # NUEVO: ARCHIVO (PDF/IMG)
-    archivo_digital = models.FileField(upload_to='certificados/cursos/', blank=True, null=True, verbose_name="Subir PDF/Imagen")
-    
+
+    archivo_digital = models.FileField(
+        upload_to="certificados/cursos/",
+        blank=True,
+        null=True,
+        verbose_name="Subir PDF/Imagen",
+    )
+
     idperfilconqueestaactivo = models.ForeignKey(
-        Datospersonales, models.DO_NOTHING, db_column="idperfilconqueestaactivo", blank=True, null=True, related_name="cursos"
+        Datospersonales,
+        on_delete=models.CASCADE,
+        db_column="idperfilconqueestaactivo",
+        blank=True,
+        null=True,
+        related_name="cursos",
     )
 
     def clean(self):
-        if self.fechainicio: validar_no_futuro(self.fechainicio)
-        if self.fechafin: validar_no_futuro(self.fechafin)
+        if self.fechainicio:
+            validar_no_futuro(self.fechainicio)
+        if self.fechafin:
+            validar_no_futuro(self.fechafin)
         if self.fechainicio and self.fechafin:
             validar_rango_fechas(self.fechainicio, self.fechafin)
 
     class Meta:
         db_table = "cursosrealizados"
         managed = True
-        ordering = ['-fechainicio']
+        ordering = ["-fechainicio"]
 
 
 class Reconocimientos(CleanSaveMixin, models.Model):
-    idreconocimiento = models.IntegerField(primary_key=True)
+    idreconocimiento = models.BigAutoField(primary_key=True)
+
     tiporeconocimiento = models.CharField(max_length=20, blank=True, null=True)
     fechareconocimiento = models.DateField(blank=True, null=True)
     descripcionreconocimiento = models.CharField(max_length=100, blank=True, null=True)
     entidadpatrocinadora = models.CharField(max_length=100, blank=True, null=True)
     nombrecontactoauspicia = models.CharField(max_length=100, blank=True, null=True)
     telefonocontactoauspicia = models.CharField(max_length=60, blank=True, null=True)
+
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
-    
-    # LINK EXTERNO
+
     rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
-    
-    # NUEVO: ARCHIVO (PDF/IMG)
-    archivo_digital = models.FileField(upload_to='certificados/logros/', blank=True, null=True, verbose_name="Subir PDF/Imagen")
-    
+
+    archivo_digital = models.FileField(
+        upload_to="certificados/logros/",
+        blank=True,
+        null=True,
+        verbose_name="Subir PDF/Imagen",
+    )
+
     idperfilconqueestaactivo = models.ForeignKey(
-        Datospersonales, models.DO_NOTHING, db_column="idperfilconqueestaactivo", blank=True, null=True, related_name="reconocimientos"
+        Datospersonales,
+        on_delete=models.CASCADE,
+        db_column="idperfilconqueestaactivo",
+        blank=True,
+        null=True,
+        related_name="reconocimientos",
     )
 
     def clean(self):
@@ -168,14 +207,21 @@ class Reconocimientos(CleanSaveMixin, models.Model):
     class Meta:
         db_table = "reconocimientos"
         managed = True
-        ordering = ['-fechareconocimiento']
+        ordering = ["-fechareconocimiento"]
 
 
 class Productosacademicos(CleanSaveMixin, models.Model):
-    idproductoacademico = models.IntegerField(primary_key=True)
+    idproductoacademico = models.BigAutoField(primary_key=True)
+
     idperfilconqueestaactivo = models.ForeignKey(
-        Datospersonales, models.DO_NOTHING, db_column="idperfilconqueestaactivo", blank=True, null=True, related_name="productos_academicos"
+        Datospersonales,
+        on_delete=models.CASCADE,
+        db_column="idperfilconqueestaactivo",
+        blank=True,
+        null=True,
+        related_name="productos_academicos",
     )
+
     nombrerecurso = models.CharField(max_length=100, blank=True, null=True)
     clasificador = models.CharField(max_length=100, blank=True, null=True)
     descripcion = models.CharField(max_length=100, blank=True, null=True)
@@ -187,10 +233,17 @@ class Productosacademicos(CleanSaveMixin, models.Model):
 
 
 class Productoslaborales(CleanSaveMixin, models.Model):
-    idproductoslaborales = models.IntegerField(primary_key=True)
+    idproductoslaborales = models.BigAutoField(primary_key=True)
+
     idperfilconqueestaactivo = models.ForeignKey(
-        Datospersonales, models.DO_NOTHING, db_column="idperfilconqueestaactivo", blank=True, null=True, related_name="productos_laborales"
+        Datospersonales,
+        on_delete=models.CASCADE,
+        db_column="idperfilconqueestaactivo",
+        blank=True,
+        null=True,
+        related_name="productos_laborales",
     )
+
     nombreproducto = models.CharField(max_length=100, blank=True, null=True)
     fechaproducto = models.DateField(blank=True, null=True)
     descripcion = models.CharField(max_length=100, blank=True, null=True)
@@ -203,7 +256,7 @@ class Productoslaborales(CleanSaveMixin, models.Model):
     class Meta:
         db_table = "productoslaborales"
         managed = True
-        ordering = ['-fechaproducto']
+        ordering = ["-fechaproducto"]
 
 
 class Ventagarage(CleanSaveMixin, models.Model):
@@ -212,26 +265,36 @@ class Ventagarage(CleanSaveMixin, models.Model):
         ("Regular", "Regular"),
     ]
 
-    idventagaraje = models.IntegerField(primary_key=True)
+    idventagaraje = models.BigAutoField(primary_key=True)
+
     nombreproducto = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES)
     fechapublicacion = models.DateField()
     imagen = models.CharField(max_length=100, blank=True, null=True)
-    activo = models.BooleanField()
-    
-    # NUEVO: Subida de archivo (Foto real)
-    archivo_digital = models.FileField(upload_to='garage/', blank=True, null=True, verbose_name="Foto Real del Producto")
-    
+    activo = models.BooleanField(default=True)
+
+    archivo_digital = models.FileField(
+        upload_to="garage/",
+        blank=True,
+        null=True,
+        verbose_name="Foto Real del Producto",
+    )
+
     idperfilconqueestaactivo = models.ForeignKey(
-        Datospersonales, models.DO_NOTHING, db_column="idperfilconqueestaactivo", blank=True, null=True, related_name="ventas_garage"
+        Datospersonales,
+        on_delete=models.CASCADE,
+        db_column="idperfilconqueestaactivo",
+        blank=True,
+        null=True,
+        related_name="ventas_garage",
     )
 
     def clean(self):
         if self.fechapublicacion:
             validar_no_futuro(self.fechapublicacion)
-        
+
         if self.estado:
             estado_normalizado = self.estado.capitalize()
             if estado_normalizado not in ["Bueno", "Regular"]:
@@ -241,4 +304,4 @@ class Ventagarage(CleanSaveMixin, models.Model):
     class Meta:
         db_table = "ventagarage"
         managed = True
-        ordering = ['-fechapublicacion']
+        ordering = ["-fechapublicacion"]

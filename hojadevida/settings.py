@@ -27,7 +27,11 @@ if RENDER_EXTERNAL_HOSTNAME:
 # =========================
 # CSRF Trusted Origins
 # =========================
-CSRF_TRUSTED_ORIGINS = ["https://*.onrender.com"]
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="https://*.onrender.com"
+).split(",")
+
 
 # =========================
 # Apps

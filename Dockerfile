@@ -21,7 +21,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # static no necesita DB
-RUN python manage.py collectstatic --noinput
+CMD ["sh","-c","python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn hojadevida.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
+
 
 # migrate SÍ necesita DB, así que se ejecuta al iniciar (ya con env vars)
 CMD ["sh","-c","python manage.py migrate --noinput && gunicorn hojadevida.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
