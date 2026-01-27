@@ -17,8 +17,12 @@ IN_RENDER = bool(os.environ.get("RENDER"))
 # =========================
 # Hosts permitidos
 # =========================
-# En producción, aceptamos el dominio de Render y localhost
-ALLOWED_HOSTS = ["*"] # Dejamos * temporalmente para asegurar que no sea error de dominio
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com"]
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
 
 # =========================
 # CSRF Trusted Origins
