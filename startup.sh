@@ -1,21 +1,20 @@
 #!/bin/bash
 
-echo "--- INICIANDO INSTALACIÓN DE DEPENDENCIAS ---"
+echo "--- 1. INSTALANDO LIBRERÍAS DE PYTHON (Django, Weasyprint...) ---"
+# Esto soluciona el error "No module named django"
+pip install -r requirements.txt
 
-# 1. Instalar librerías gráficas
+echo "--- 2. INSTALANDO LIBRERÍAS DE LINUX (Para PDF) ---"
+# Esto soluciona el error de WeasyPrint/Gobject
 apt-get update -qq
 apt-get install -y -qq libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info libcairo2
 
-echo "--- DEPENDENCIAS INSTALADAS ---"
-
-# 2. Migraciones
-echo "==> Migrando base de datos..."
+echo "--- 3. MIGRANDO BASE DE DATOS ---"
 python manage.py migrate
 
-# 3. Estáticos
-echo "==> Recolectando estáticos..."
+echo "--- 4. RECOLECTANDO ARCHIVOS ESTÁTICOS ---"
 python manage.py collectstatic --noinput
 
-# 4. Iniciar Gunicorn (CON EL PUERTO 8000 AGREGADO)
-echo "==> Arrancando servidor..."
+echo "--- 5. ARRANCANDO SERVIDOR ---"
+# Importante: Puerto 8000
 gunicorn --bind=0.0.0.0:8000 --timeout 600 hojadevida.wsgi
