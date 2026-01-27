@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: hoja-de-vida
+    env: python
+    plan: free
+    buildCommand: |
+      apt-get update
+      apt-get install -y \
+        libcairo2 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libgdk-pixbuf2.0-0 \
+        libffi-dev \
+        shared-mime-info
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn hojadevida.wsgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: hojadevida.settings
+      - key: PYTHONUNBUFFERED
+        value: "1"

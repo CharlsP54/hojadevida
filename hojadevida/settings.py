@@ -11,52 +11,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY", default="dev-secret-key")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-# Detecta si está corriendo en Azure App Service
+IN_RENDER = bool(os.environ.get("RENDER"))
 IN_AZURE = bool(os.environ.get("WEBSITE_SITE_NAME") or os.environ.get("WEBSITE_HOSTNAME"))
 
 # =========================
 # Hosts permitidos
 # =========================
-# Lee ALLOWED_HOSTS desde variables (separadas por coma)
-raw_hosts = config("ALLOWED_HOSTS", default="").strip()
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS",
+    default="127.0.0.1,localhost"
+).split(",")
 
-if raw_hosts:
-    ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(",") if h.strip()]
-else:
-    ALLOWED_HOSTS = []
-
-# Si estás en Azure y NO estás en DEBUG, lo más estable es permitir todos los hosts
-# para evitar fallas por IPs internas (169.254.x.x) usadas por health checks/probes.
-if IN_AZURE and not DEBUG:
-    ALLOWED_HOSTS = ["*"]
-else:
-    # En local, agrega defaults razonables
-    if not ALLOWED_HOSTS:
-        ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
-
-    # Agrega el hostname que Azure asigna (si existe)
-    website_hostname = os.environ.get("WEBSITE_HOSTNAME")
-    if website_hostname:
-        ALLOWED_HOSTS.append(website_hostname)
-
-    # Quita duplicados manteniendo orden
-    seen = set()
-    ALLOWED_HOSTS = [x for x in ALLOWED_HOSTS if not (x in seen or seen.add(x))]
+if IN_RENDER:
+    ALLOWED_HOSTS.append(".onrender.com")
 
 # =========================
 # CSRF Trusted Origins
 # =========================
-raw_csrf = config("CSRF_TRUSTED_ORIGINS", default="").strip()
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in raw_csrf.split(",") if o.strip()]
+CSRF_TRUSTED_ORIGINS = []
 
-# Si estás en Azure, agrega el dominio https://<app>.azurewebsites.net automáticamente
-# (Esto ayuda cuando entras por el dominio de Azure)
-if IN_AZURE:
-    website_hostname = os.environ.get("WEBSITE_HOSTNAME")
-    if website_hostname:
-        origin = f"https://{website_hostname}"
-        if origin not in CSRF_TRUSTED_ORIGINS:
-            CSRF_TRUSTED_ORIGINS.append(origin)
+if IN_RENDER:
+    CSRF_TRUSTED_ORIGINS.append("https://*.onrender.com")
 
 # =========================
 # Apps
@@ -108,21 +83,18 @@ WSGI_APPLICATION = "hojadevida.wsgi.application"
 # =========================
 # Base de datos
 # =========================
-DATABASE_URL = config(
-    "DATABASE_URL",
-    default="postgresql://postgres:postgres123@localhost:5432/x"
-)
+DATABASE_URL = config("DATABASE_URL")
 
 DATABASES = {
     "default": dj_database_url.parse(
         DATABASE_URL,
         conn_max_age=600,
-        ssl_require=(IN_AZURE and not DEBUG),
+        ssl_require=True,
     )
 }
 
 # =========================
-# Validación de passwords (admin/users)
+# Passwords
 # =========================
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -140,7 +112,7 @@ USE_I18N = True
 USE_TZ = True
 
 # =========================
-# Static files
+# Static & Media
 # =========================
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -151,34 +123,25 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-# --- Esto evita que Django te pida migraciones del app cv ---
-# (porque tus modelos están managed=False y la BD ya existe)
-
+# =========================
+# Migraciones
+# =========================
 MIGRATION_MODULES = {"cv": None}
 
-
 # =========================
-# Seguridad en producción (Azure)
+# Seguridad Producción
 # =========================
-if IN_AZURE and not DEBUG:
+if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
+    SECURE_SSL_REDIRECT = True
 
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
-    SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=60, cast=int)
+    SECURE_HSTS_SECONDS = 60
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
     X_FRAME_OPTIONS = "SAMEORIGIN"
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = "same-origin"
-
-    LOGGING = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "handlers": {"console": {"class": "logging.StreamHandler"}},
-        "root": {"handlers": ["console"], "level": "INFO"},
-    }
