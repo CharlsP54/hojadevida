@@ -67,12 +67,21 @@ def cv_print(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
     
     # 1. Filtros
-    show_exp = request.GET.get('exp', 'on') == 'on'
-    show_edu = request.GET.get('edu', 'on') == 'on'
-    show_acad = request.GET.get('acad', 'on') == 'on'
-    show_lab = request.GET.get('lab', 'on') == 'on'
-    show_rec = request.GET.get('rec', 'on') == 'on'
-    show_garage = request.GET.get('garage') == 'on'
+    # Si la clave existe en GET, el usuario lo marcó. 
+    # Si no existe (es None), el usuario lo desmarcó.
+    show_exp = request.GET.get('exp') is not None
+    show_edu = request.GET.get('edu') is not None
+    show_acad = request.GET.get('acad') is not None
+    show_lab = request.GET.get('lab') is not None
+    show_rec = request.GET.get('rec') is not None
+    show_garage = request.GET.get('garage') is not None
+
+    # NOTA: Para que el botón de "Descargar PDF" directo (el azul de afuera) 
+    # siga funcionando con todo activo, agregamos una validación extra:
+    if not request.GET:
+        show_exp = show_edu = show_acad = show_lab = show_rec = True
+        show_garage = False # O True, según prefieras por defecto
+
 
     # 2. Querysets
     experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil) if show_exp else []

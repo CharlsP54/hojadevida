@@ -349,6 +349,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{% url 'cv_print' perfil.idperfil %}" method="GET" target="_blank">
+                <input type="hidden" name="from_modal" value="true">
                 <div class="modal-body">
                     <p class="text-muted small mb-3">Opciones de impresión:</p>
                     <div class="d-flex flex-column gap-2">
