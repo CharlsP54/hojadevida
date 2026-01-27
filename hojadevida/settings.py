@@ -8,30 +8,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # =========================
 # Seguridad / Entorno
 # =========================
-SECRET_KEY = config("SECRET_KEY", default="dev-secret-key")
+SECRET_KEY = config("SECRET_KEY", default="django-insecure-cv-key")
 DEBUG = config("DEBUG", default=False, cast=bool)
 
+# Detectar entorno
 IN_RENDER = bool(os.environ.get("RENDER"))
-IN_AZURE = bool(os.environ.get("WEBSITE_SITE_NAME") or os.environ.get("WEBSITE_HOSTNAME"))
 
 # =========================
 # Hosts permitidos
 # =========================
-ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS",
-    default="127.0.0.1,localhost"
-).split(",")
-
-if IN_RENDER:
-    ALLOWED_HOSTS.append(".onrender.com")
+# En producción, aceptamos el dominio de Render y localhost
+ALLOWED_HOSTS = ["*"] # Dejamos * temporalmente para asegurar que no sea error de dominio
 
 # =========================
 # CSRF Trusted Origins
 # =========================
-CSRF_TRUSTED_ORIGINS = []
-
-if IN_RENDER:
-    CSRF_TRUSTED_ORIGINS.append("https://*.onrender.com")
+CSRF_TRUSTED_ORIGINS = ["https://*.onrender.com"]
 
 # =========================
 # Apps
@@ -43,7 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "cv",
+    "cv", # Tu app principal
 ]
 
 # =========================
@@ -51,8 +43,7 @@ INSTALLED_APPS = [
 # =========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-
+    "whitenoise.middleware.WhiteNoiseMiddleware", # Vital para Render
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -83,13 +74,14 @@ WSGI_APPLICATION = "hojadevida.wsgi.application"
 # =========================
 # Base de datos
 # =========================
-DATABASE_URL = config("DATABASE_URL")
+# Usamos un fallback seguro por si olvidas poner la variable en local
+default_db = "sqlite:///" + str(BASE_DIR / "db.sqlite3")
 
 DATABASES = {
-    "default": dj_database_url.parse(
-        DATABASE_URL,
+    "default": dj_database_url.config(
+        default=config("DATABASE_URL", default=default_db),
         conn_max_age=600,
-        ssl_require=True,
+        conn_health_checks=True,
     )
 }
 
@@ -116,7 +108,10 @@ USE_TZ = True
 # =========================
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# CAMBIO IMPORTANTE: Usamos CompressedStaticFilesStorage
+# La versión "Manifest" da error 500 si falta algún archivo referenciado. Esta es más segura.
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -124,24 +119,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =========================
-# Migraciones
-# =========================
-MIGRATION_MODULES = {"cv": None}
-
-# =========================
 # Seguridad Producción
 # =========================
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
-
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-    SECURE_HSTS_SECONDS = 60
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-
-    X_FRAME_OPTIONS = "SAMEORIGIN"
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_REFERRER_POLICY = "same-origin"
