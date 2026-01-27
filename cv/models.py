@@ -67,7 +67,7 @@ class Datospersonales(CleanSaveMixin, models.Model):
 
     class Meta:
         db_table = "datospersonales"
-        managed = False
+        managed = True
 
 
 class Experiencialaboral(CleanSaveMixin, models.Model):
@@ -102,7 +102,7 @@ class Experiencialaboral(CleanSaveMixin, models.Model):
 
     class Meta:
         db_table = "experiencialaboral"
-        managed = False
+        managed = True
         ordering = ['-fechainiciogestion']
 
 
@@ -137,7 +137,7 @@ class Cursosrealizados(CleanSaveMixin, models.Model):
 
     class Meta:
         db_table = "cursosrealizados"
-        managed = False
+        managed = True
         ordering = ['-fechainicio']
 
 
@@ -167,7 +167,7 @@ class Reconocimientos(CleanSaveMixin, models.Model):
 
     class Meta:
         db_table = "reconocimientos"
-        managed = False
+        managed = True
         ordering = ['-fechareconocimiento']
 
 
@@ -183,7 +183,7 @@ class Productosacademicos(CleanSaveMixin, models.Model):
 
     class Meta:
         db_table = "productosacademicos"
-        managed = False
+        managed = True
 
 
 class Productoslaborales(CleanSaveMixin, models.Model):
@@ -202,7 +202,7 @@ class Productoslaborales(CleanSaveMixin, models.Model):
 
     class Meta:
         db_table = "productoslaborales"
-        managed = False
+        managed = True
         ordering = ['-fechaproducto']
 
 
@@ -240,5 +240,5 @@ class Ventagarage(CleanSaveMixin, models.Model):
 
     class Meta:
         db_table = "ventagarage"
-        managed = False
+        managed = True
         ordering = ['-fechapublicacion']
