@@ -1,28 +1,22 @@
 #!/bin/bash
 
-# 1. Instalar dependencias del sistema para WeasyPrint (PDF)
-# Esto es vital porque Azure Linux viene "pelado"
-echo "==> Instalando librerías gráficas..."
-apt-get update && apt-get install -y \
-    libcairo2 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libgdk-pixbuf2.0-0 \
-    libffi-dev \
-    shared-mime-info
+echo "--- INICIANDO INSTALACIÓN DE DEPENDENCIAS ---"
 
-# 2. Migraciones de Django
-echo "==> Ejecutando migraciones..."
+# 1. Instalar librerías gráficas (WeasyPrint lo necesita OBLIGATORIAMENTE)
+# Usamos -qq para que no llene el log de texto basura
+apt-get update -qq
+apt-get install -y -qq libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info libcairo2
+
+echo "--- DEPENDENCIAS INSTALADAS ---"
+
+# 2. Migraciones
+echo "==> Migrando base de datos..."
 python manage.py migrate
 
-# 3. Archivos Estáticos
+# 3. Estáticos
 echo "==> Recolectando estáticos..."
 python manage.py collectstatic --noinput
 
 # 4. Iniciar Gunicorn
-echo "==> Iniciando servidor..."
-# Aumentamos el timeout a 600 porque la instalación inicial toma tiempo
-exec gunicorn hojadevida.wsgi:application \
-    --bind 0.0.0.0:8000 \
-    --workers 2 \
-    --timeout 600
+echo "==> Arrancando servidor..."
+gunicorn --bind=0.0.0.0 --timeout 600 hojadevida.wsgi
