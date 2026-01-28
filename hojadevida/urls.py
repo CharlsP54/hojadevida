@@ -2,11 +2,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from cv import views as cv_views
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", cv_views.home, name="home"),
+
+    # /  -->  /cv/
+    path("", RedirectView.as_view(url="/cv/", permanent=False)),
+
     path("cv/", include("cv.urls")),
 ]
 
