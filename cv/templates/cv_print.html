@@ -6,7 +6,6 @@
     <title>CV - {{ perfil.nombres }}</title>
     <link rel="stylesheet" href="{% static 'css/print_cv.css' %}">
 
-    {# Esto asegura que cada “Anexo” salga en página nueva en el PDF #}
     <style>
         .page-break {
             page-break-before: always;
@@ -30,175 +29,176 @@
 </head>
 <body>
 
-    <div class="page-container">
+<div class="page-container">
 
-        <div class="sidebar">
-            {% if perfil.foto_perfil_url %}
-                <img src="{{ perfil.foto_perfil_url }}" class="profile-img">
-            {% else %}
-                <div style="height: 20px;"></div>
+    <div class="sidebar">
+        {% if perfil.foto_perfil_url %}
+            <img src="{{ perfil.foto_perfil_url }}" class="profile-img">
+        {% else %}
+            <div style="height: 20px;"></div>
+        {% endif %}
+
+        <div class="sidebar-block">
+            <h3>Contacto</h3>
+
+            {% if perfil.telefonoconvencional %}
+            <div class="mini-entry">
+                <span class="small-title">Móvil:</span>
+                <p>{{ perfil.telefonoconvencional }}</p>
+            </div>
             {% endif %}
 
-            <div class="sidebar-block">
-                <h3>Contacto</h3>
-
-                {% if perfil.telefonoconvencional %}
-                <div class="mini-entry">
-                    <span class="small-title">Móvil:</span>
-                    <p>{{ perfil.telefonoconvencional }}</p>
-                </div>
-                {% endif %}
-
-                {% if perfil.telefonofijo %}
-                <div class="mini-entry">
-                    <span class="small-title">Fijo:</span>
-                    <p>{{ perfil.telefonofijo }}</p>
-                </div>
-                {% endif %}
-
-                {% if perfil.sitioweb %}
-                <div class="mini-entry">
-                    <span class="small-title">Web:</span>
-                    <a href="{{ perfil.sitioweb }}" class="break-link" target="_blank">
-                        {{ perfil.sitioweb }}
-                    </a>
-                </div>
-                {% endif %}
+            {% if perfil.telefonofijo %}
+            <div class="mini-entry">
+                <span class="small-title">Fijo:</span>
+                <p>{{ perfil.telefonofijo }}</p>
             </div>
+            {% endif %}
 
-            <div class="sidebar-block">
-                <h3>Ubicación</h3>
-                <div class="mini-entry">
-                    <span class="small-title">Domicilio:</span>
-                    <p>{{ perfil.direcciondomiciliaria }}</p>
-                </div>
-                {% if perfil.direcciontrabajo %}
-                <div class="mini-entry">
-                    <span class="small-title">Trabajo:</span>
-                    <p>{{ perfil.direcciontrabajo }}</p>
-                </div>
-                {% endif %}
+            {% if perfil.sitioweb %}
+            <div class="mini-entry">
+                <span class="small-title">Web:</span>
+                <a href="{{ perfil.sitioweb }}" class="break-link" target="_blank">
+                    {{ perfil.sitioweb }}
+                </a>
             </div>
-
-            <div class="sidebar-block">
-                <h3>Perfil</h3>
-                <div class="mini-entry"><span class="small-title">Nacionalidad:</span> <p>{{ perfil.nacionalidad }}</p></div>
-                <div class="mini-entry"><span class="small-title">Cédula:</span> <p>{{ perfil.numerocedula }}</p></div>
-                <div class="mini-entry"><span class="small-title">Nacimiento:</span> <p>{{ perfil.fechanacimiento|date:"d/m/Y" }}</p></div>
-                <div class="mini-entry"><span class="small-title">Estado Civil:</span> <p>{{ perfil.estadocivil }}</p></div>
-                {% if perfil.sexo %}
-                <div class="mini-entry"><span class="small-title">Sexo:</span> <p>{{ perfil.sexo }}</p></div>
-                {% endif %}
-                {% if perfil.licenciaconducir %}
-                <div class="mini-entry"><span class="small-title">Licencia:</span> <p>{{ perfil.licenciaconducir }}</p></div>
-                {% endif %}
-            </div>
+            {% endif %}
         </div>
 
-        <div class="main-content">
+        <div class="sidebar-block">
+            <h3>Ubicación</h3>
+            <div class="mini-entry">
+                <span class="small-title">Domicilio:</span>
+                <p>{{ perfil.direcciondomiciliaria }}</p>
+            </div>
+            {% if perfil.direcciontrabajo %}
+            <div class="mini-entry">
+                <span class="small-title">Trabajo:</span>
+                <p>{{ perfil.direcciontrabajo }}</p>
+            </div>
+            {% endif %}
+        </div>
 
-            <div class="header">
-                <h1>{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
-                {% if perfil.descripcionperfil %}
-                    <div class="subtitle">{{ perfil.descripcionperfil }}</div>
-                {% endif %}
+        <div class="sidebar-block">
+            <h3>Perfil</h3>
+            <div class="mini-entry"><span class="small-title">Nacionalidad:</span> <p>{{ perfil.nacionalidad }}</p></div>
+            <div class="mini-entry"><span class="small-title">Cédula:</span> <p>{{ perfil.numerocedula }}</p></div>
+            <div class="mini-entry"><span class="small-title">Nacimiento:</span> <p>{{ perfil.fechanacimiento|date:"d/m/Y" }}</p></div>
+            <div class="mini-entry"><span class="small-title">Estado Civil:</span> <p>{{ perfil.estadocivil }}</p></div>
+            {% if perfil.sexo %}
+            <div class="mini-entry"><span class="small-title">Sexo:</span> <p>{{ perfil.sexo }}</p></div>
+            {% endif %}
+            {% if perfil.licenciaconducir %}
+            <div class="mini-entry"><span class="small-title">Licencia:</span> <p>{{ perfil.licenciaconducir }}</p></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="header">
+            <h1>{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
+            {% if perfil.descripcionperfil %}
+                <div class="subtitle">{{ perfil.descripcionperfil }}</div>
+            {% endif %}
+        </div>
+
+        {% if experiencias %}
+        <div class="main-block">
+            <div class="section-title">Experiencia Laboral</div>
+
+            {% for e in experiencias %}
+            <div class="experience-entry keep-together">
+                <div class="exp-header">
+                    <span class="role">{{ e.cargodesempenado }}</span>
+                    <span class="date">
+                        {{ e.fechainiciogestion|date:"M Y" }} -
+                        {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}Actual{% endif %}
+                    </span>
+                </div>
+                <div class="company">{{ e.nombrempresa }}</div>
+                <div class="exp-desc">{{ e.descripcionfunciones|linebreaksbr }}</div>
             </div>
 
-            {% if experiencias %}
-            <div class="main-block">
-                <div class="section-title">Experiencia Laboral</div>
-                {% for e in experiencias %}
-                <div class="experience-entry keep-together">
-                    <div class="exp-header">
-                        <span class="role">{{ e.cargodesempenado }}</span>
-                        <span class="date">
-                            {{ e.fechainiciogestion|date:"M Y" }} -
-                            {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}Actual{% endif %}
-                        </span>
-                    </div>
-                    <div class="company">{{ e.nombrempresa }}</div>
-                    <div class="exp-desc">{{ e.descripcionfunciones|linebreaksbr }}</div>
-                </div>
-
-                {# ANEXO: Solo si hay páginas calculadas en doc_pages #}
-                {% if e.doc_pages %}
-                <div class="annex page-break">
-                    <div class="annex-title">Anexo — Soporte / Certificado (Experiencia)</div>
-                    {% for page_url in e.doc_pages %}
-                        <img src="{{ page_url }}" class="doc-page" alt="Documento">
-                    {% endfor %}
-                </div>
-                {% endif %}
-
+            {% if e.doc_pages %}
+            <div class="annex page-break">
+                <div class="annex-title">Anexo — Soporte / Certificado (Experiencia)</div>
+                {% for page_url in e.doc_pages %}
+                    <img src="{{ page_url }}" class="doc-page" alt="Documento">
                 {% endfor %}
             </div>
             {% endif %}
+            {% endfor %}
 
-            {% if cursos %}
-            <div class="main-block">
-                <div class="section-title">Formación y Certificaciones</div>
-                {% for c in cursos %}
-                <div class="experience-entry keep-together">
-                    <div class="exp-header">
-                        <span class="role">{{ c.nombrecurso }}</span>
-                        <span class="date">{{ c.totalhoras }} Horas</span>
-                    </div>
-                    <div class="company">{{ c.entidadpatrocinadora }}</div>
+        </div>
+        {% endif %}
+
+        {% if cursos %}
+        <div class="main-block">
+            <div class="section-title">Formación y Certificaciones</div>
+
+            {% for c in cursos %}
+            <div class="experience-entry keep-together">
+                <div class="exp-header">
+                    <span class="role">{{ c.nombrecurso }}</span>
+                    <span class="date">{{ c.totalhoras }} Horas</span>
                 </div>
+                <div class="company">{{ c.entidadpatrocinadora }}</div>
+            </div>
 
-                {% if c.doc_pages %}
-                <div class="annex page-break">
-                    <div class="annex-title">Anexo — Certificado (Curso)</div>
-                    {% for page_url in c.doc_pages %}
-                        <img src="{{ page_url }}" class="doc-page" alt="Certificado">
-                    {% endfor %}
-                </div>
-                {% endif %}
-
+            {% if c.doc_pages %}
+            <div class="annex page-break">
+                <div class="annex-title">Anexo — Certificado (Curso)</div>
+                {% for page_url in c.doc_pages %}
+                    <img src="{{ page_url }}" class="doc-page" alt="Certificado">
                 {% endfor %}
             </div>
             {% endif %}
+            {% endfor %}
 
-            {% if productos_academicos %}
-            <div class="main-block">
-                <div class="section-title">Producción Académica</div>
-                {% for p in productos_academicos %}
-                <div class="experience-entry keep-together">
-                    <span class="role">{{ p.nombrerecurso }}</span>
-                    <div class="company">{{ p.clasificador }}</div>
-                    <div class="exp-desc">{{ p.descripcion }}</div>
-                </div>
-                {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if productos_academicos %}
+        <div class="main-block">
+            <div class="section-title">Producción Académica</div>
+            {% for p in productos_academicos %}
+            <div class="experience-entry keep-together">
+                <span class="role">{{ p.nombrerecurso }}</span>
+                <div class="company">{{ p.clasificador }}</div>
+                <div class="exp-desc">{{ p.descripcion }}</div>
             </div>
-            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
 
-            {% if productos_laborales %}
-            <div class="main-block">
-                <div class="section-title">Productos Laborales</div>
-                {% for p in productos_laborales %}
-                <div class="experience-entry keep-together">
-                    <div class="exp-header">
-                        <span class="role">{{ p.nombreproducto }}</span>
-                        <span class="date">{{ p.fechaproducto|date:"M Y" }}</span>
-                    </div>
-                    <div class="exp-desc">{{ p.descripcion }}</div>
+        {% if productos_laborales %}
+        <div class="main-block">
+            <div class="section-title">Productos Laborales</div>
+            {% for p in productos_laborales %}
+            <div class="experience-entry keep-together">
+                <div class="exp-header">
+                    <span class="role">{{ p.nombreproducto }}</span>
+                    <span class="date">{{ p.fechaproducto|date:"M Y" }}</span>
                 </div>
-                {% endfor %}
+                <div class="exp-desc">{{ p.descripcion }}</div>
             </div>
-            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
 
-            {% if reconocimientos %}
-            <div class="main-block">
-                <div class="section-title">Reconocimientos</div>
-                <ul class="clean-list">
-                    {% for r in reconocimientos %}
-                    <li class="keep-together">
-                        <span style="font-weight: bold; color: #0f172a;">{{ r.tiporeconocimiento }}</span>
-                        — {{ r.entidadpatrocinadora }}
-                        {% if r.descripcionreconocimiento %}
-                            <br><span style="font-size: 8.5pt; color: #64748b;">{{ r.descripcionreconocimiento }}</span>
-                        {% endif %}
-                    </li>
+        {% if reconocimientos %}
+        <div class="main-block">
+            <div class="section-title">Reconocimientos</div>
+
+            <ul class="clean-list">
+                {% for r in reconocimientos %}
+                <li class="keep-together">
+                    <span style="font-weight: bold; color: #0f172a;">{{ r.tiporeconocimiento }}</span>
+                    — {{ r.entidadpatrocinadora }}
+                    {% if r.descripcionreconocimiento %}
+                        <br><span style="font-size: 8.5pt; color: #64748b;">{{ r.descripcionreconocimiento }}</span>
+                    {% endif %}
 
                     {% if r.doc_pages %}
                     <div class="annex page-break">
@@ -208,14 +208,41 @@
                         {% endfor %}
                     </div>
                     {% endif %}
-
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
 
         </div>
+        {% endif %}
+
+        {% if ventas_garage %}
+        <div class="main-block">
+            <div class="section-title">Venta de Garage</div>
+
+            {% for v in ventas_garage %}
+            <div class="experience-entry keep-together">
+                <div class="exp-header">
+                    <span class="role">{{ v.nombreproducto }}</span>
+                    <span class="date">${{ v.precio }}</span>
+                </div>
+                <div class="exp-desc">{{ v.descripcion }}</div>
+            </div>
+
+            {% if v.doc_pages %}
+            <div class="annex page-break">
+                <div class="annex-title">Anexo — Evidencia (Garage)</div>
+                {% for page_url in v.doc_pages %}
+                    <img src="{{ page_url }}" class="doc-page" alt="Documento">
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endfor %}
+
+        </div>
+        {% endif %}
+
     </div>
+</div>
 
 </body>
 </html>
