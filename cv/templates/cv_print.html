@@ -7,27 +7,17 @@
         @page { size: A4; margin: 0; }
         body { font-family: 'Helvetica', 'Arial', sans-serif; margin: 0; padding: 0; color: #333; line-height: 1.4; }
         .container { width: 100%; height: 100%; display: table; }
-        
-        /* COLUMNA IZQUIERDA (32%) */
         .left-col { display: table-cell; width: 32%; background-color: #1e293b; color: #e2e8f0; padding: 30px 20px; vertical-align: top; font-size: 9.5pt; }
-        
         .profile-img-container { text-align: center; margin-bottom: 25px; }
         .profile-img { width: 140px; height: 140px; border-radius: 50%; border: 4px solid #fff; object-fit: cover; background-color: #cbd5e1; }
-        
         h3.left-title { color: #38bdf8; border-bottom: 1px solid #475569; padding-bottom: 5px; margin-top: 25px; margin-bottom: 15px; font-size: 12pt; text-transform: uppercase; font-weight: bold; }
-        
         .info-block { margin-bottom: 15px; }
         .info-label { color: #94a3b8; font-size: 8pt; text-transform: uppercase; font-weight: bold; display: block; }
         .info-value { color: #fff; font-weight: 500; font-size: 9.5pt; word-wrap: break-word; }
-        
-        /* COLUMNA DERECHA (68%) */
         .right-col { display: table-cell; width: 68%; padding: 40px 30px; vertical-align: top; background-color: #ffffff; }
-        
         .header-name { font-size: 26pt; font-weight: 800; color: #0f172a; text-transform: uppercase; line-height: 1; }
         .profile-desc { font-size: 10.5pt; color: #475569; margin-top: 15px; margin-bottom: 30px; text-align: justify; }
-        
         h2.right-title { font-size: 14pt; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; text-transform: uppercase; font-weight: 700; }
-        
         .item-row { margin-bottom: 20px; page-break-inside: avoid; }
         .item-head { display: flex; justify-content: space-between; border-left: 3px solid #3b82f6; padding-left: 10px; margin-bottom: 5px; }
         .item-title { font-weight: bold; font-size: 11pt; color: #1e293b; }
@@ -68,7 +58,7 @@
         <div class="right-col">
             <div class="header-name">{{ perfil.nombres }}</div>
             <div class="header-name" style="color: #3b82f6;">{{ perfil.apellidos }}</div>
-            <div class="profile-desc">{{ perfil.descripcionperfil }}</div>
+            <div class="profile-desc">{{ perfil.descripcionperfil|default:"" }}</div>
 
             {% if experiencias %}
             <h2 class="right-title">Experiencia Laboral</h2>
@@ -78,7 +68,7 @@
                     <div><div class="item-title">{{ e.cargodesempenado }}</div><div class="item-subtitle">{{ e.nombrempresa }}</div></div>
                     <div>{{ e.fechainiciogestion|date:"M Y" }}</div>
                 </div>
-                <div class="item-body">{{ e.descripcionfunciones }}</div>
+                <div class="item-body">{{ e.descripcionfunciones|default:"" }}</div>
             </div>
             {% endfor %}
             {% endif %}
@@ -102,7 +92,7 @@
                 <div class="item-head">
                     <div><div class="item-title">{{ p.nombrerecurso }}</div><div class="item-subtitle">{{ p.clasificador }}</div></div>
                 </div>
-                <div class="item-body">{{ p.descripcion }}</div>
+                <div class="item-body">{{ p.descripcion|default:"" }}</div>
             </div>
             {% endfor %}
             {% endif %}
@@ -115,7 +105,7 @@
                     <div><div class="item-title">{{ p.nombreproducto }}</div></div>
                     <div>{{ p.fechaproducto|date:"M Y" }}</div>
                 </div>
-                <div class="item-body">{{ p.descripcion }}</div>
+                <div class="item-body">{{ p.descripcion|default:"" }}</div>
             </div>
             {% endfor %}
             {% endif %}
@@ -128,7 +118,7 @@
                     <div><div class="item-title">{{ r.tiporeconocimiento }}</div><div class="item-subtitle">{{ r.entidadpatrocinadora }}</div></div>
                     <div>{{ r.fechareconocimiento|date:"Y" }}</div>
                 </div>
-                <div class="item-body">{{ r.descripcionreconocimiento }}</div>
+                <div class="item-body">{{ r.descripcionreconocimiento|default:"" }}</div>
             </div>
             {% endfor %}
             {% endif %}

@@ -5,7 +5,7 @@ import os
 import uuid
 
 # ============================================================
-# Upload helpers (Funciones para renombrar archivos)
+# Upload helpers
 # ============================================================
 
 def _upload_uuid(prefix: str, filename: str) -> str:
@@ -20,21 +20,18 @@ def upload_garage(instance, filename): return _upload_uuid("garage", filename)
 
 
 # ============================================================
-# VALIDADORES (Reglas de Negocio)
+# VALIDADORES
 # ============================================================
 
 def validar_no_futuro(fecha):
-    """Impide seleccionar fechas futuras."""
     if fecha and fecha > date.today():
         raise ValidationError("No se permiten fechas futuras.")
 
 def validar_rango_fechas(inicio, fin):
-    """Impide que la fecha de fin sea anterior a la de inicio."""
     if inicio and fin and fin < inicio:
         raise ValidationError("La fecha final debe ser posterior a la inicial.")
 
 def validar_edad_18_100(fecha):
-    """Valida que la persona tenga entre 18 y 100 años."""
     if not fecha: return
     hoy = date.today()
     edad = hoy.year - fecha.year - ((hoy.month, hoy.day) < (fecha.month, fecha.day))
@@ -42,13 +39,11 @@ def validar_edad_18_100(fecha):
     if edad > 100: raise ValidationError(f"Edad no válida ({edad} años).")
 
 def validar_10_digitos(valor):
-    """Valida que el campo tenga exactamente 10 números."""
     if not valor: return
     if not valor.isdigit(): raise ValidationError("Solo se permiten números.")
     if len(valor) != 10: raise ValidationError(f"Debe tener exactamente 10 dígitos (tiene {len(valor)}).")
 
 def validar_positivo(valor):
-    """Valida que el número sea mayor a 0."""
     if valor is not None and valor <= 0:
         raise ValidationError("El valor debe ser mayor a 0 (no se permiten negativos ni cero).")
 
@@ -65,6 +60,15 @@ class CleanSaveMixin(models.Model):
 # ============================================================
 
 class Datospersonales(CleanSaveMixin, models.Model):
+    # ✅ Opciones de Estado Civil
+    ESTADO_CIVIL_CHOICES = [
+        ('Soltero', 'Soltero'),
+        ('Casado', 'Casado'),
+        ('Viudo', 'Viudo'),
+        ('Divorciado', 'Divorciado'),
+        ('Union de hecho', 'Unión de hecho'),
+    ]
+
     idperfil = models.BigAutoField(primary_key=True)
     
     nombres = models.CharField(max_length=60, blank=True, null=True)
@@ -80,21 +84,25 @@ class Datospersonales(CleanSaveMixin, models.Model):
     numerocedula = models.CharField(max_length=10, blank=True, null=True, validators=[validar_10_digitos], verbose_name="Cédula")
     
     sexo = models.CharField(max_length=1, blank=True, null=True)
-    estadocivil = models.CharField(max_length=50, blank=True, null=True)
+    
+    # ✅ AHORA ES UNA LISTA DESPLEGABLE
+    estadocivil = models.CharField(
+        max_length=50, 
+        choices=ESTADO_CIVIL_CHOICES, 
+        blank=True, 
+        null=True,
+        verbose_name="Estado Civil"
+    )
+    
     licenciaconducir = models.CharField(max_length=6, blank=True, null=True)
     
-    # Contacto
     telefonoconvencional = models.CharField(max_length=15, blank=True, null=True, validators=[validar_10_digitos], verbose_name="Celular")
     telefonofijo = models.CharField(max_length=15, blank=True, null=True)
-    
-    # ✅ EMAIL VALIDADO (EmailField valida el @ automáticamente)
     email_contacto = models.EmailField(max_length=100, blank=True, null=True, verbose_name="Email de Contacto")
-    
     direcciontrabajo = models.CharField(max_length=50, blank=True, null=True)
     direcciondomiciliaria = models.CharField(max_length=50, blank=True, null=True)
     sitioweb = models.CharField(max_length=60, blank=True, null=True)
     
-    # Configuración
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
     mostrar_experiencia = models.BooleanField(default=True)
     mostrar_cursos = models.BooleanField(default=True)
@@ -118,10 +126,7 @@ class Experiencialaboral(CleanSaveMixin, models.Model):
     cargodesempenado = models.CharField(max_length=100, blank=True, null=True)
     nombrempresa = models.CharField(max_length=50, blank=True, null=True)
     lugarempresa = models.CharField(max_length=50, blank=True, null=True)
-    
-    # ✅ EMAIL VALIDADO
     emailempresa = models.EmailField(max_length=100, blank=True, null=True, verbose_name="Email Empresa")
-    
     sitiowebempresa = models.CharField(max_length=100, blank=True, null=True)
     nombrecontactoempresarial = models.CharField(max_length=100, blank=True, null=True)
     telefonocontactoempresarial = models.CharField(max_length=60, blank=True, null=True)
@@ -149,17 +154,12 @@ class Cursosrealizados(CleanSaveMixin, models.Model):
     nombrecurso = models.CharField(max_length=100, blank=True, null=True)
     fechainicio = models.DateField(blank=True, null=True)
     fechafin = models.DateField(blank=True, null=True)
-    
     totalhoras = models.IntegerField(blank=True, null=True, validators=[validar_positivo], verbose_name="Total Horas")
-    
     descripcioncurso = models.CharField(max_length=100, blank=True, null=True)
     entidadpatrocinadora = models.CharField(max_length=100, blank=True, null=True)
     nombrecontactoauspicia = models.CharField(max_length=100, blank=True, null=True)
     telefonocontactoauspicia = models.CharField(max_length=60, blank=True, null=True)
-    
-    # ✅ EMAIL VALIDADO
     emailempresapatrocinadora = models.EmailField(max_length=60, blank=True, null=True, verbose_name="Email Patrocinador")
-    
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
     rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
     archivo_digital = models.FileField(upload_to=upload_cursos, blank=True, null=True, verbose_name="Subir PDF/Imagen")
@@ -177,24 +177,9 @@ class Cursosrealizados(CleanSaveMixin, models.Model):
 
 
 class Reconocimientos(CleanSaveMixin, models.Model):
-    # ✅ Opciones para el Tipo de Reconocimiento
-    TIPO_CHOICES = [
-        ('Publico', 'Público'),
-        ('Privado', 'Privado'),
-        ('Academico', 'Académico'),
-    ]
-
+    TIPO_CHOICES = [('Publico', 'Público'), ('Privado', 'Privado'), ('Academico', 'Académico')]
     idreconocimiento = models.BigAutoField(primary_key=True)
-    
-    # Usamos Choices (Lista desplegable)
-    tiporeconocimiento = models.CharField(
-        max_length=20, 
-        choices=TIPO_CHOICES, 
-        blank=True, 
-        null=True,
-        verbose_name="Tipo de Reconocimiento"
-    )
-    
+    tiporeconocimiento = models.CharField(max_length=20, choices=TIPO_CHOICES, blank=True, null=True, verbose_name="Tipo de Reconocimiento")
     fechareconocimiento = models.DateField(blank=True, null=True)
     descripcionreconocimiento = models.CharField(max_length=100, blank=True, null=True)
     entidadpatrocinadora = models.CharField(max_length=100, blank=True, null=True)
@@ -215,36 +200,18 @@ class Reconocimientos(CleanSaveMixin, models.Model):
 
 
 class Productosacademicos(CleanSaveMixin, models.Model):
-    # ✅ Opciones para el Clasificador
     CLASIFICADOR_CHOICES = [
-        ('Articulo cientifico', 'Artículo científico'),
-        ('Ponencia', 'Ponencia'),
-        ('Proyecto de investigacion', 'Proyecto de investigación'),
-        ('Libro', 'Libro'),
-        ('Capitulo de libro', 'Capítulo de libro'),
-        ('Recurso didactico', 'Recurso didáctico'),
+        ('Articulo cientifico', 'Artículo científico'), ('Ponencia', 'Ponencia'),
+        ('Proyecto de investigacion', 'Proyecto de investigación'), ('Libro', 'Libro'),
+        ('Capitulo de libro', 'Capítulo de libro'), ('Recurso didactico', 'Recurso didáctico'),
     ]
-
     idproductoacademico = models.BigAutoField(primary_key=True)
     idperfilconqueestaactivo = models.ForeignKey(Datospersonales, on_delete=models.CASCADE, db_column="idperfilconqueestaactivo", blank=True, null=True, related_name="productos_academicos")
-    
     nombrerecurso = models.CharField(max_length=100, blank=True, null=True)
-    
-    # Usamos Choices (Lista desplegable)
-    clasificador = models.CharField(
-        max_length=50, 
-        choices=CLASIFICADOR_CHOICES, 
-        blank=True, 
-        null=True,
-        verbose_name="Tipo de Producto"
-    )
-    
+    clasificador = models.CharField(max_length=50, choices=CLASIFICADOR_CHOICES, blank=True, null=True, verbose_name="Tipo de Producto")
     descripcion = models.CharField(max_length=100, blank=True, null=True)
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
-    
-    class Meta: 
-        db_table = "productosacademicos"
-        managed = True
+    class Meta: db_table = "productosacademicos"; managed = True
 
 
 class Productoslaborales(CleanSaveMixin, models.Model):
@@ -269,9 +236,7 @@ class Ventagarage(CleanSaveMixin, models.Model):
     idventagaraje = models.BigAutoField(primary_key=True)
     nombreproducto = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
-    
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[validar_positivo], verbose_name="Precio")
-    
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES)
     fechapublicacion = models.DateField()
     imagen = models.CharField(max_length=100, blank=True, null=True)
