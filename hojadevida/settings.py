@@ -90,6 +90,11 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
 
+CLOUDINARY_STORAGE = {
+    "CLOUDINARY_URL": config("CLOUDINARY_URL", default=""),
+}
+
+
 MEDIA_URL = "/media/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
