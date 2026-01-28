@@ -7,7 +7,6 @@ import requests
 from pypdf import PdfReader
 
 from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponseBadRequest
 
 from .models import (
     Datospersonales,
@@ -16,7 +15,7 @@ from .models import (
     Productosacademicos,
     Productoslaborales,
     Reconocimientos,
-    Ventagaraje,
+    Ventagarage,   # <-- CORRECTO (sin "j")
 )
 
 
@@ -27,9 +26,6 @@ from .models import (
 def _inject_cloudinary_transform(url: str, transform: str) -> str:
     """
     Inserta transformaciones Cloudinary después de /upload/
-    Ej:
-    https://res.cloudinary.com/.../image/upload/v1/path/file.pdf
-    -> https://res.cloudinary.com/.../image/upload/<transform>/v1/path/file.pdf
     """
     marker = "/upload/"
     if marker not in url:
@@ -49,17 +45,15 @@ def _is_pdf_url(file_url: str) -> bool:
     return bool(file_url) and ".pdf" in file_url.lower()
 
 
-def _count_pdf_pages_from_url(file_url: str, timeout: int = 15) -> int:
+def _count_pdf_pages_from_url(file_url: str, timeout: int = 20) -> int:
     """
-    Cuenta páginas descargando el PDF.
-    Si falla (timeout, permisos, etc.), devuelve 1.
+    Cuenta páginas descargando el PDF. Si falla, devuelve 1.
     """
     try:
         r = requests.get(file_url, timeout=timeout)
         r.raise_for_status()
         reader = PdfReader(BytesIO(r.content))
-        pages = len(reader.pages) or 1
-        return pages
+        return max(len(reader.pages), 1)
     except Exception:
         return 1
 
@@ -71,10 +65,9 @@ def _build_doc_pages(
     img_width: int = 1200,
 ) -> tuple[bool, list[str]]:
     """
-    Devuelve:
-    - is_pdf: True si es PDF
-    - pages_urls: lista de URLs (cada página renderizada como JPG por Cloudinary)
-      Si NO es PDF, devuelve [file_url] como única "página".
+    Retorna:
+    - is_pdf: True si el archivo es PDF
+    - pages_urls: lista de URLs de páginas (JPG) si es PDF, o [url] si es imagen
     """
     if not file_url:
         return (False, [])
@@ -82,7 +75,6 @@ def _build_doc_pages(
     if not _is_pdf_url(file_url):
         return (False, [file_url])
 
-    # Contar páginas (para meter "documento completo" en el PDF final)
     pages = _count_pdf_pages_from_url(file_url)
     pages = min(max(pages, 1), max_pages)
 
@@ -90,10 +82,10 @@ def _build_doc_pages(
 
     pages_urls: list[str] = []
     for i in range(1, pages + 1):
-        # f_jpg -> convierte a imagen
-        # q_auto -> calidad automática
-        # w_1200,c_scale -> tamaño
-        # pg_i -> página i del PDF
+        # f_jpg: convierte a JPG
+        # q_auto: calidad automática
+        # w_1200,c_scale: escala a ancho fijo
+        # pg_i: página i del PDF
         transform = f"f_jpg,q_auto,w_{img_width},c_scale,pg_{i}"
         pages_urls.append(_inject_cloudinary_transform(base_img_url, transform))
 
@@ -102,9 +94,9 @@ def _build_doc_pages(
 
 def _enrich_with_doc_pages(items, file_attr: str = "archivo_digital"):
     """
-    Agrega atributos dinámicos a cada objeto:
-      - obj.doc_is_pdf (bool)
-      - obj.doc_pages (list[str])  # si pdf => páginas como imágenes, si imagen => [url]
+    Agrega propiedades dinámicas:
+      obj.doc_is_pdf (bool)
+      obj.doc_pages (list[str])
     """
     for obj in items:
         f = getattr(obj, file_attr, None)
@@ -121,22 +113,52 @@ def _enrich_with_doc_pages(items, file_attr: str = "archivo_digital"):
 
 def perfil_detail(request, idperfil):
     """
-    Dashboard principal (tu perfil_detail.html)
+    Dashboard principal (perfil_detail.html)
     """
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
-    experiencias = Experiencialaboral.objects.filter(idperfil=perfil).order_by("-fechainiciogestion")
-    cursos = Cursosrealizados.objects.filter(idperfil=perfil).order_by("-fechainicio")
-    productos_academicos = Productosacademicos.objects.filter(idperfil=perfil).order_by("-idproductosacademicos")
-    productos_laborales = Productoslaborales.objects.filter(idperfil=perfil).order_by("-fechaproducto")
-    reconocimientos = Reconocimientos.objects.filter(idperfil=perfil).order_by("-idreconocimiento")
-    ventas_garage = Ventagaraje.objects.filter(idperfil=perfil).order_by("-fechapublicacion")
+    # NOTA: tu FK se llama idperfilconqueestaactivo
+    experiencias = (
+        Experiencialaboral.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-fechainiciogestion")
+    )
 
-    # Esto NO es obligatorio para tu HTML actual, pero ayuda si luego quieres usar doc_pages ahí también.
-    # Si no lo usas, no afecta.
+    cursos = (
+        Cursosrealizados.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-fechainicio")
+    )
+
+    productos_academicos = (
+        Productosacademicos.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-idproductoacademico")
+    )
+
+    productos_laborales = (
+        Productoslaborales.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-fechaproducto")
+    )
+
+    reconocimientos = (
+        Reconocimientos.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-fechareconocimiento")
+    )
+
+    ventas_garage = (
+        Ventagarage.objects
+        .filter(idperfilconqueestaactivo=perfil, activo=True)
+        .order_by("-fechapublicacion")
+    )
+
+    # (Opcional) Deja listo doc_pages por si luego quieres usarlo también en el detalle.
     _enrich_with_doc_pages(experiencias)
     _enrich_with_doc_pages(cursos)
     _enrich_with_doc_pages(reconocimientos)
+    _enrich_with_doc_pages(ventas_garage)
 
     context = {
         "perfil": perfil,
@@ -152,14 +174,12 @@ def perfil_detail(request, idperfil):
 
 def cv_print(request, idperfil):
     """
-    Exporta PDF del CV (cv_print.html) incluyendo anexos:
-      - Si hay archivo_digital PDF, mete TODAS las páginas dentro del PDF final (como imágenes).
+    Exporta CV (cv_print.html).
+    Incluye anexos: si hay PDF en archivo_digital, inserta sus páginas renderizadas.
     """
-
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
-    # Helpers para el modal:
-    # Si el modal está activo (from_modal=true), los checkboxes no marcados NO vienen en GET.
+    # Si viene del modal, lo NO marcado no viene en GET
     def want(key: str, default: bool):
         if request.GET.get("from_modal") == "true":
             return key in request.GET
@@ -172,21 +192,53 @@ def cv_print(request, idperfil):
     include_rec = want("rec", True)
     include_garage = want("garage", False)
 
-    experiencias = Experiencialaboral.objects.filter(idperfil=perfil).order_by("-fechainiciogestion") if include_exp else []
-    cursos = Cursosrealizados.objects.filter(idperfil=perfil).order_by("-fechainicio") if include_edu else []
-    productos_academicos = Productosacademicos.objects.filter(idperfil=perfil).order_by("-idproductosacademicos") if include_acad else []
-    productos_laborales = Productoslaborales.objects.filter(idperfil=perfil).order_by("-fechaproducto") if include_lab else []
-    reconocimientos = Reconocimientos.objects.filter(idperfil=perfil).order_by("-idreconocimiento") if include_rec else []
-    ventas_garage = Ventagaraje.objects.filter(idperfil=perfil).order_by("-fechapublicacion") if include_garage else []
+    experiencias = (
+        Experiencialaboral.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-fechainiciogestion")
+        if include_exp else []
+    )
 
-    # IMPORTANTÍSIMO:
-    # Esto hace que en el PDF final puedas imprimir el certificado COMPLETO (páginas)
+    cursos = (
+        Cursosrealizados.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-fechainicio")
+        if include_edu else []
+    )
+
+    productos_academicos = (
+        Productosacademicos.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-idproductoacademico")
+        if include_acad else []
+    )
+
+    productos_laborales = (
+        Productoslaborales.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-fechaproducto")
+        if include_lab else []
+    )
+
+    reconocimientos = (
+        Reconocimientos.objects
+        .filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True)
+        .order_by("-fechareconocimiento")
+        if include_rec else []
+    )
+
+    ventas_garage = (
+        Ventagarage.objects
+        .filter(idperfilconqueestaactivo=perfil, activo=True)
+        .order_by("-fechapublicacion")
+        if include_garage else []
+    )
+
+    # Clave: preparar anexos para el PDF final
     _enrich_with_doc_pages(experiencias)
     _enrich_with_doc_pages(cursos)
     _enrich_with_doc_pages(reconocimientos)
-
-    # Si en garage guardas archivos también, descomenta:
-    # _enrich_with_doc_pages(ventas_garage)
+    _enrich_with_doc_pages(ventas_garage)
 
     context = {
         "perfil": perfil,
