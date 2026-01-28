@@ -33,10 +33,6 @@ def _get_cloudinary_thumbnail(file_url):
     if "cloudinary" not in file_url:
         return file_url
 
-    # Truco de Cloudinary: Cambiar extensión a .jpg y pedir página 1
-    # Ejemplo entrada: .../upload/v1234/archivo.pdf
-    # Ejemplo salida:  .../upload/w_600,f_jpg,pg_1/v1234/archivo.jpg
-    
     try:
         if "/upload/" in file_url:
             base_part, id_part = file_url.split("/upload/")
@@ -75,7 +71,6 @@ def _enrich_objects(objects):
 
 def doc_redirect(request, model, pk):
     """ Redirecciona al archivo original (útil para links cortos) """
-    # Mapeo simple de modelos
     MODELS = {
         "exp": Experiencialaboral,
         "cursos": Cursosrealizados,
@@ -97,7 +92,18 @@ def cv_home(request):
     perfil = Datospersonales.objects.filter(activarparaqueseveaenfront=True).first()
     if perfil:
         return redirect("cv_detail", idperfil=perfil.idperfil)
-    return HttpResponse("<h1>No hay perfiles activos</h1>")
+    # Si no hay perfil, mostramos la vista de sin datos
+    return sin_datos(request)
+
+def sin_datos(request):
+    """ Esta es la función que faltaba y causaba el error """
+    return HttpResponse(
+        "<div style='text-align:center; padding:50px; font-family:sans-serif;'>"
+        "<h1>No hay perfiles activos</h1>"
+        "<p>Vaya al panel de administrador (/admin) y cree un perfil marcando la casilla 'Activar para Front'.</p>"
+        "<a href='/admin'>Ir al Admin</a>"
+        "</div>"
+    )
 
 def perfil_detail(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
@@ -131,8 +137,7 @@ def perfil_detail(request, idperfil):
 def cv_print(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
-    # 1. Lógica de Filtros (Checkboxes)
-    # Si viene del modal, usamos lo que diga el checkbox. Si no, todo True.
+    # 1. Lógica de Filtros
     from_modal = request.GET.get("from_modal") == "true"
     
     def check(key):
@@ -143,7 +148,7 @@ def cv_print(request, idperfil):
     show_acad = check("acad")
     show_lab = check("lab")
     show_rec = check("rec")
-    show_garage = check("garage") if from_modal else False # Garage false por defecto
+    show_garage = check("garage") if from_modal else False 
 
     # 2. Filtrar Querysets
     experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainiciogestion") if show_exp else []
@@ -153,7 +158,7 @@ def cv_print(request, idperfil):
     reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_rec else []
     garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil, activo=True) if show_garage else []
 
-    # 3. Generar PDF Principal (WeasyPrint)
+    # 3. Generar PDF Principal
     context = {
         "perfil": perfil,
         "experiencias": experiencias,
@@ -171,29 +176,23 @@ def cv_print(request, idperfil):
     html.write_pdf(main_buffer)
     main_buffer.seek(0)
 
-    # 4. Fusión de Anexos (PyPDF + Requests)
+    # 4. Fusión de Anexos
     merger = PdfWriter()
-    
-    # A) Primero el CV generado
     merger.append(main_buffer)
 
-    # B) Función para descargar y pegar
     def append_attachments(queryset):
         for item in queryset:
             if item.archivo_digital:
                 url = item.archivo_digital.url
                 if url.lower().endswith(".pdf"):
                     try:
-                        # Descargar desde Cloudinary
                         response = requests.get(url, timeout=10)
                         if response.status_code == 200:
-                            # Crear buffer en memoria para este archivo
                             remote_pdf = io.BytesIO(response.content)
                             merger.append(remote_pdf)
                     except Exception as e:
                         print(f"Error uniendo PDF {url}: {e}")
 
-    # C) Orden de anexos al final
     if show_edu: append_attachments(cursos)
     if show_exp: append_attachments(experiencias)
     if show_rec: append_attachments(reconocimientos)
