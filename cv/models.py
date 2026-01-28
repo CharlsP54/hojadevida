@@ -69,6 +69,28 @@ class Datospersonales(CleanSaveMixin, models.Model):
         ('Union de hecho', 'Unión de hecho'),
     ]
 
+    # ✅ Opciones de Sexo
+    SEXO_CHOICES = [
+        ('Masculino', 'Masculino'),
+        ('Femenino', 'Femenino'),
+        ('Prefiero no decir', 'Prefiero no decir'),
+    ]
+
+    # ✅ Opciones de Licencia (Con descripción normativa)
+    LICENCIA_CHOICES = [
+        ('A', 'Tipo A: Motocicletas, ciclomotores, tricar y cuadrones'),
+        ('B', 'Tipo B: Automóviles y camionetas (hasta 1.75 ton)'),
+        ('F', 'Tipo F: Automotores especiales adaptados (Discapacidad)'),
+        ('A1', 'Tipo A1: Mototaxis o tricimotos de servicio comercial'),
+        ('C', 'Tipo C: Taxis, camionetas livianas (hasta 3.5 ton)'),
+        ('C1', 'Tipo C1: Vehículos policiales, ambulancias, militares'),
+        ('D', 'Tipo D: Servicio de pasajeros (intracantonal, interprovincial)'),
+        ('D1', 'Tipo D1: Escolar, institucional y turismo'),
+        ('E', 'Tipo E: Camiones pesados y extra pesados (tráiler, volqueta)'),
+        ('E1', 'Tipo E1: Ferrocarriles, autoferros, trolebuses'),
+        ('G', 'Tipo G: Maquinaria agrícola y equipo caminero'),
+    ]
+
     idperfil = models.BigAutoField(primary_key=True)
     
     nombres = models.CharField(max_length=60, blank=True, null=True)
@@ -83,9 +105,16 @@ class Datospersonales(CleanSaveMixin, models.Model):
     fechanacimiento = models.DateField(blank=True, null=True, validators=[validar_edad_18_100], verbose_name="Fecha Nacimiento")
     numerocedula = models.CharField(max_length=10, blank=True, null=True, validators=[validar_10_digitos], verbose_name="Cédula")
     
-    sexo = models.CharField(max_length=1, blank=True, null=True)
+    # ✅ AHORA ES LISTA DESPLEGABLE
+    sexo = models.CharField(
+        max_length=20, 
+        choices=SEXO_CHOICES, 
+        blank=True, 
+        null=True,
+        verbose_name="Género / Sexo"
+    )
     
-    # ✅ AHORA ES UNA LISTA DESPLEGABLE
+    # ✅ AHORA ES LISTA DESPLEGABLE
     estadocivil = models.CharField(
         max_length=50, 
         choices=ESTADO_CIVIL_CHOICES, 
@@ -94,7 +123,14 @@ class Datospersonales(CleanSaveMixin, models.Model):
         verbose_name="Estado Civil"
     )
     
-    licenciaconducir = models.CharField(max_length=6, blank=True, null=True)
+# ✅ AHORA ES LISTA DESPLEGABLE (Permite elegir el tipo exacto)
+    licenciaconducir = models.CharField(
+        max_length=50,  # <--- ¡IMPORTANTE! CÁMBIALO A 50 AQUÍ
+        choices=LICENCIA_CHOICES, 
+        blank=True, 
+        null=True,
+        verbose_name="Tipo de Licencia"
+    )
     
     telefonoconvencional = models.CharField(max_length=15, blank=True, null=True, validators=[validar_10_digitos], verbose_name="Celular")
     telefonofijo = models.CharField(max_length=15, blank=True, null=True)
