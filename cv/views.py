@@ -18,6 +18,20 @@ from .models import (
     Ventagarage,   # <-- CORRECTO (sin "j")
 )
 
+from django.shortcuts import redirect
+
+def home(request):
+    """
+    Ruta principal.
+    Si existe un perfil activo, manda al detalle.
+    Si no hay, manda al admin para cargar datos.
+    """
+    perfil = Datospersonales.objects.filter(activarparaqueseveaenfront=True).order_by("-idperfil").first()
+    if perfil:
+        return redirect("perfil_detail", idperfil=perfil.idperfil)
+    return redirect("/admin/")
+
+
 
 # ============================================================
 # Helpers: Cloudinary PDF -> imágenes por página (pg_1, pg_2...)
