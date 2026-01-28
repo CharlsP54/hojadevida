@@ -132,8 +132,6 @@ def perfil_detail(request, idperfil):
     reconocimientos = Reconocimientos.objects.filter(idperfil=perfil).order_by("-idreconocimiento")
     ventas_garage = Ventagarage.objects.filter(idperfil=perfil).order_by("-fechapublicacion")
 
-    # Esto NO es obligatorio para tu HTML actual, pero ayuda si luego quieres usar doc_pages ahí también.
-    # Si no lo usas, no afecta.
     _enrich_with_doc_pages(experiencias)
     _enrich_with_doc_pages(cursos)
     _enrich_with_doc_pages(reconocimientos)
@@ -155,7 +153,6 @@ def cv_print(request, idperfil):
     Exporta PDF del CV (cv_print.html) incluyendo anexos:
       - Si hay archivo_digital PDF, mete TODAS las páginas dentro del PDF final (como imágenes).
     """
-
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
     # Helpers para el modal:
@@ -179,14 +176,9 @@ def cv_print(request, idperfil):
     reconocimientos = Reconocimientos.objects.filter(idperfil=perfil).order_by("-idreconocimiento") if include_rec else []
     ventas_garage = Ventagarage.objects.filter(idperfil=perfil).order_by("-fechapublicacion") if include_garage else []
 
-    # IMPORTANTÍSIMO:
-    # Esto hace que en el PDF final puedas imprimir el certificado COMPLETO (páginas)
     _enrich_with_doc_pages(experiencias)
     _enrich_with_doc_pages(cursos)
     _enrich_with_doc_pages(reconocimientos)
-
-    # Si en garage guardas archivos también, descomenta:
-    # _enrich_with_doc_pages(ventas_garage)
 
     context = {
         "perfil": perfil,
@@ -198,3 +190,11 @@ def cv_print(request, idperfil):
         "ventas_garage": ventas_garage,
     }
     return render(request, "cv_print.html", context)
+
+
+def sin_datos(request):
+    """
+    Página base para /cv/ (sin idperfil).
+    Usa tu template existente: sin_datos.html
+    """
+    return render(request, "sin_datos.html")
