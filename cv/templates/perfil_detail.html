@@ -62,7 +62,7 @@
         border-radius: 50%;
     }
 
-    /* Tarjetas de Miniaturas (Documentos) */
+    /* Tarjetas de Documentos/Fotos */
     .doc-card {
         border: 1px solid #e2e8f0;
         border-radius: 0.75rem;
@@ -131,8 +131,8 @@
     <div class="row align-items-center">
         <div class="col-md-auto text-center text-md-start mb-3 mb-md-0">
             <div class="avatar-frame mx-auto">
-                {% if perfil.fotoperfil %}
-                    <img src="{{ perfil.fotoperfil.url }}" class="avatar-img" alt="Foto">
+                {% if perfil.foto_perfil_url %}
+                    <img src="{{ perfil.foto_perfil_url }}" class="avatar-img" alt="Foto de Perfil">
                 {% else %}
                     <div class="d-flex align-items-center justify-content-center h-100 bg-secondary text-white fs-1 fw-bold">
                         {{ perfil.nombres|slice:":1" }}{{ perfil.apellidos|slice:":1" }}
@@ -227,10 +227,12 @@
                             <span class="text-muted">Estado Civil</span>
                             <span class="fw-semibold">{{ perfil.estadocivil|default:"—" }}</span>
                         </li>
+                        {% if perfil.sexo %}
                         <li class="d-flex justify-content-between">
                             <span class="text-muted">Género</span>
-                            <span class="fw-semibold">{{ perfil.sexo|default:"—" }}</span>
+                            <span class="fw-semibold">{% if perfil.sexo == 'M' %}Masculino{% elif perfil.sexo == 'F' %}Femenino{% else %}{{ perfil.sexo }}{% endif %}</span>
                         </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
@@ -506,4 +508,11 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        VanillaTilt.init(document.querySelectorAll(".hover-shadow"), { max: 3, speed: 400, glare: true, "max-glare": 0.05 });
+    });
+</script>
 {% endblock %}

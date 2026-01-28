@@ -6,84 +6,76 @@
     <style>
         @page {
             size: A4;
-            margin: 0; /* Sin márgenes en la hoja para que el color llegue al borde */
+            margin: 0;
         }
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
             margin: 0;
             padding: 0;
             color: #333;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
-        /* CONTENEDOR PRINCIPAL: Divide la hoja en 2 columnas */
         .container {
             width: 100%;
             height: 100%;
-            display: table; /* Truco para columnas iguales en WeasyPrint */
+            display: table;
         }
 
-        /* === COLUMNA IZQUIERDA (Lateral) === */
+        /* === COLUMNA IZQUIERDA (32%) === */
         .left-col {
             display: table-cell;
-            width: 32%; /* Un tercio de la hoja */
-            background-color: #2c3e50; /* Color oscuro elegante */
-            color: white;
+            width: 32%;
+            background-color: #1e293b; /* Azul oscuro elegante */
+            color: #e2e8f0;
             padding: 30px 20px;
             vertical-align: top;
+            font-size: 9.5pt;
         }
 
-        /* Foto de perfil */
         .profile-img-container {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         .profile-img {
-            width: 150px;
-            height: 150px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             border: 4px solid #fff;
             object-fit: cover;
-            background-color: #95a5a6; /* Fondo gris si no hay foto */
-        }
-        .initials {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 4px solid #fff;
-            background-color: #34495e;
-            color: white;
-            font-size: 60px;
-            line-height: 140px;
-            font-weight: bold;
-            display: inline-block;
+            background-color: #cbd5e1;
         }
 
-        /* Títulos en la izquierda */
         h3.left-title {
-            color: #3498db; /* Azul claro para resaltar sobre oscuro */
-            border-bottom: 1px solid #7f8c8d;
+            color: #38bdf8; /* Cyan claro */
+            border-bottom: 1px solid #475569;
             padding-bottom: 5px;
-            margin-top: 30px;
-            font-size: 14pt;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 12pt;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-weight: bold;
         }
 
-        .left-content {
-            font-size: 10pt;
+        .info-block {
             margin-bottom: 15px;
         }
-        .left-content p {
-            margin: 5px 0;
-        }
-        .contact-item {
-            margin-bottom: 10px;
+        .info-label {
+            color: #94a3b8;
+            font-size: 8pt;
+            text-transform: uppercase;
+            font-weight: bold;
             display: block;
+            margin-bottom: 2px;
+        }
+        .info-value {
+            color: #fff;
+            font-weight: 500;
             word-wrap: break-word;
         }
 
-        /* === COLUMNA DERECHA (Principal) === */
+        /* === COLUMNA DERECHA (68%) === */
         .right-col {
             display: table-cell;
             width: 68%;
@@ -92,79 +84,79 @@
             background-color: #ffffff;
         }
 
-        /* Encabezado Nombre */
         .header-name {
-            font-size: 28pt;
-            font-weight: bold;
-            color: #2c3e50;
+            font-size: 26pt;
+            font-weight: 800;
+            color: #0f172a;
             text-transform: uppercase;
-            margin: 0;
-            line-height: 1.1;
+            line-height: 1;
+            margin-bottom: 5px;
         }
-        .header-role {
-            font-size: 14pt;
-            color: #3498db;
-            margin-top: 5px;
-            margin-bottom: 20px;
-            font-weight: 300;
-        }
-        .profile-summary {
-            font-size: 11pt;
-            color: #555;
-            margin-bottom: 30px;
-            border-left: 4px solid #3498db;
-            padding-left: 15px;
-        }
-
-        /* Secciones Derecha */
-        h2.right-title {
-            font-size: 16pt;
-            color: #2c3e50;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 8px;
-            margin-top: 35px;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-        }
-
-        .job-item {
-            margin-bottom: 25px;
-            page-break-inside: avoid;
-        }
-        .job-title {
-            font-weight: bold;
-            font-size: 12pt;
-            color: #333;
-        }
-        .job-company {
-            color: #3498db;
-            font-weight: bold;
-            font-size: 11pt;
-        }
-        .job-date {
-            float: right;
-            font-size: 10pt;
-            color: #7f8c8d;
-            font-style: italic;
-        }
-        .job-desc {
+        .profile-desc {
             font-size: 10.5pt;
-            color: #444;
-            margin-top: 5px;
+            color: #475569;
+            margin-top: 15px;
+            margin-bottom: 30px;
             text-align: justify;
         }
+
+        h2.right-title {
+            font-size: 14pt;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
         
-        /* Badges para Skills */
-        .skill-tag {
-            display: inline-block;
-            background: #ecf0f1;
-            color: #2c3e50;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 9pt;
-            margin-right: 5px;
+        /* Items */
+        .item-row {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        .item-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-left: 3px solid #3b82f6;
+            padding-left: 10px;
             margin-bottom: 5px;
+        }
+        .item-title {
             font-weight: bold;
+            font-size: 11pt;
+            color: #1e293b;
+        }
+        .item-subtitle {
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+        .item-date {
+            font-size: 9pt;
+            color: #64748b;
+            font-style: italic;
+        }
+        .item-body {
+            font-size: 10pt;
+            color: #334155;
+            padding-left: 13px;
+            text-align: justify;
+        }
+
+        /* Imágenes en Logros */
+        .achievement-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            margin-top: 5px;
+            display: block;
         }
     </style>
 </head>
@@ -173,61 +165,99 @@
     <div class="container">
         
         <div class="left-col">
+            
             <div class="profile-img-container">
-                {% if perfil.fotoperfil %}
-                    <img src="{{ perfil.fotoperfil.url }}" class="profile-img">
+                {% if perfil.foto_perfil_url %}
+                    <img src="{{ perfil.foto_perfil_url }}" class="profile-img">
                 {% else %}
-                    <div class="initials">
+                    <div style="width:140px; height:140px; border-radius:50%; background:#334155; color:#fff; font-size:50px; line-height:140px; font-weight:bold; margin:0 auto; border:4px solid #fff;">
                         {{ perfil.nombres|slice:":1" }}{{ perfil.apellidos|slice:":1" }}
                     </div>
                 {% endif %}
             </div>
 
             <h3 class="left-title">Contacto</h3>
-            <div class="left-content">
-                {% if perfil.telefonoconvencional %}
-                <div class="contact-item">
-                    <strong>Móvil:</strong><br>
-                    {{ perfil.telefonoconvencional }}
-                </div>
-                {% endif %}
-                
-                <div class="contact-item">
-                    <strong>Email:</strong><br>
-                    {{ user.email }}
-                </div>
+            
+            {% if perfil.telefonoconvencional %}
+            <div class="info-block">
+                <span class="info-label">Celular</span>
+                <span class="info-value">{{ perfil.telefonoconvencional }}</span>
+            </div>
+            {% endif %}
 
-                {% if perfil.sitioweb %}
-                <div class="contact-item">
-                    <strong>Web:</strong><br>
-                    {{ perfil.sitioweb }}
-                </div>
-                {% endif %}
-
-                <div class="contact-item">
-                    <strong>Ubicación:</strong><br>
-                    {{ perfil.lugarnacimiento }}
-                </div>
+            {% if perfil.telefonofijo %}
+            <div class="info-block">
+                <span class="info-label">Teléfono Fijo</span>
+                <span class="info-value">{{ perfil.telefonofijo }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="info-block">
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ user.email }}</span>
             </div>
 
-            <h3 class="left-title">Detalles</h3>
-            <div class="left-content">
-                <p><strong>Cédula:</strong> {{ perfil.numerocedula }}</p>
-                <p><strong>Nacionalidad:</strong> {{ perfil.nacionalidad }}</p>
-                {% if perfil.licenciaconducir %}
-                <p><strong>Licencia:</strong> {{ perfil.licenciaconducir }}</p>
-                {% endif %}
+            {% if perfil.sitioweb %}
+            <div class="info-block">
+                <span class="info-label">Web / Portafolio</span>
+                <span class="info-value" style="font-size: 8.5pt;">{{ perfil.sitioweb }}</span>
+            </div>
+            {% endif %}
+
+            <h3 class="left-title">Info. Personal</h3>
+            
+            <div class="info-block">
+                <span class="info-label">Cédula ID</span>
+                <span class="info-value">{{ perfil.numerocedula }}</span>
             </div>
 
+            {% if perfil.fechanacimiento %}
+            <div class="info-block">
+                <span class="info-label">Fecha Nacimiento</span>
+                <span class="info-value">{{ perfil.fechanacimiento|date:"d M, Y" }}</span>
             </div>
+            {% endif %}
+
+            <div class="info-block">
+                <span class="info-label">Nacionalidad</span>
+                <span class="info-value">{{ perfil.nacionalidad }}</span>
+            </div>
+
+            <div class="info-block">
+                <span class="info-label">Estado Civil</span>
+                <span class="info-value">{{ perfil.estadocivil|default:"No especificado" }}</span>
+            </div>
+            
+            {% if perfil.licenciaconducir %}
+            <div class="info-block">
+                <span class="info-label">Licencia Conducir</span>
+                <span class="info-value">{{ perfil.licenciaconducir }}</span>
+            </div>
+            {% endif %}
+
+            <h3 class="left-title">Ubicación</h3>
+            
+            <div class="info-block">
+                <span class="info-label">Domicilio</span>
+                <span class="info-value">{{ perfil.direcciondomiciliaria }}</span>
+            </div>
+            
+            {% if perfil.direcciontrabajo %}
+            <div class="info-block">
+                <span class="info-label">Trabajo</span>
+                <span class="info-value">{{ perfil.direcciontrabajo }}</span>
+            </div>
+            {% endif %}
+
+        </div>
 
         <div class="right-col">
             
             <div class="header-name">{{ perfil.nombres }}</div>
-            <div class="header-name">{{ perfil.apellidos }}</div>
+            <div class="header-name" style="color: #3b82f6;">{{ perfil.apellidos }}</div>
             
             {% if perfil.descripcionperfil %}
-                <div class="profile-summary">
+                <div class="profile-desc">
                     {{ perfil.descripcionperfil }}
                 </div>
             {% endif %}
@@ -235,14 +265,18 @@
             {% if experiencias %}
             <h2 class="right-title">Experiencia Laboral</h2>
             {% for e in experiencias %}
-            <div class="job-item">
-                <div class="job-date">
-                    {{ e.fechainiciogestion|date:"M Y" }} - 
-                    {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}Actual{% endif %}
+            <div class="item-row">
+                <div class="item-head">
+                    <div>
+                        <div class="item-title">{{ e.cargodesempenado }}</div>
+                        <div class="item-subtitle">{{ e.nombrempresa }}</div>
+                    </div>
+                    <div class="item-date">
+                        {{ e.fechainiciogestion|date:"M Y" }} - 
+                        {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}Actualidad{% endif %}
+                    </div>
                 </div>
-                <div class="job-title">{{ e.cargodesempenado }}</div>
-                <div class="job-company">{{ e.nombrempresa }}</div>
-                <div class="job-desc">
+                <div class="item-body">
                     {{ e.descripcionfunciones }}
                 </div>
             </div>
@@ -252,48 +286,65 @@
             {% if cursos %}
             <h2 class="right-title">Formación Académica</h2>
             {% for c in cursos %}
-            <div class="job-item">
-                <div class="job-date">
-                    {{ c.fechainicio|date:"Y" }}
+            <div class="item-row">
+                <div class="item-head">
+                    <div>
+                        <div class="item-title">{{ c.nombrecurso }}</div>
+                        <div class="item-subtitle">{{ c.entidadpatrocinadora }}</div>
+                    </div>
+                    <div class="item-date">
+                        {{ c.fechainicio|date:"Y" }} | {{ c.totalhoras }} hrs
+                    </div>
                 </div>
-                <div class="job-title">{{ c.nombrecurso }}</div>
-                <div class="job-company">{{ c.entidadpatrocinadora }}</div>
-                <div class="job-desc" style="font-size: 9pt; color: #666;">
-                    Duración: {{ c.totalhoras }} horas
-                </div>
+                {% if c.descripcioncurso %}
+                <div class="item-body">{{ c.descripcioncurso }}</div>
+                {% endif %}
             </div>
             {% endfor %}
             {% endif %}
 
             {% if reconocimientos %}
-            <h2 class="right-title">Logros</h2>
+            <h2 class="right-title">Méritos y Logros</h2>
             {% for r in reconocimientos %}
-            <div class="job-item">
-                <div class="job-date">{{ r.fechareconocimiento|date:"Y" }}</div>
-                <div class="job-title">{{ r.tiporeconocimiento }}</div>
-                <div class="job-desc">{{ r.descripcionreconocimiento }} ({{ r.entidadpatrocinadora }})</div>
+            <div class="item-row">
+                <div class="item-head">
+                    <div>
+                        <div class="item-title">{{ r.tiporeconocimiento }}</div>
+                        <div class="item-subtitle">{{ r.entidadpatrocinadora }}</div>
+                    </div>
+                    <div class="item-date">{{ r.fechareconocimiento|date:"Y" }}</div>
+                </div>
+                <div class="item-body">
+                    {{ r.descripcionreconocimiento }}
+                    {% if r.thumbnail %}
+                        <img src="{{ r.thumbnail }}" class="achievement-img">
+                    {% elif r.archivo_digital %}
+                        <img src="{{ r.archivo_digital.url }}" class="achievement-img">
+                    {% endif %}
+                </div>
             </div>
             {% endfor %}
             {% endif %}
 
-            {% if productos_academicos or productos_laborales %}
-            <h2 class="right-title">Proyectos Destacados</h2>
-            {% for p in productos_laborales %}
-            <div class="job-item">
-                <div class="job-title">{{ p.nombreproducto }} <span class="skill-tag" style="font-size: 8pt; vertical-align: middle;">Laboral</span></div>
-                <div class="job-desc">{{ p.descripcion }}</div>
-            </div>
-            {% endfor %}
-            {% for p in productos_academicos %}
-            <div class="job-item">
-                <div class="job-title">{{ p.nombrerecurso }} <span class="skill-tag" style="font-size: 8pt; vertical-align: middle;">Académico</span></div>
-                <div class="job-desc">{{ p.descripcion }}</div>
+            {% if ventas_garage %}
+            <h2 class="right-title">Emprendimiento / Garage</h2>
+            {% for v in ventas_garage %}
+            <div class="item-row">
+                <div class="item-head">
+                    <div>
+                        <div class="item-title">{{ v.nombreproducto }}</div>
+                        <div class="item-subtitle" style="color: #16a34a;">${{ v.precio }} ({{ v.estado }})</div>
+                    </div>
+                    <div class="item-date">{{ v.fechapublicacion|date:"d/m/Y" }}</div>
+                </div>
+                <div class="item-body">
+                    {{ v.descripcion }}
+                </div>
             </div>
             {% endfor %}
             {% endif %}
 
         </div>
     </div>
-
 </body>
 </html>
