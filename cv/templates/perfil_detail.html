@@ -402,7 +402,7 @@
                 </div>
             </div>
             
-            <div class="tab-pane fade" id="pills-rec" role="tabpanel">
+             <div class="tab-pane fade" id="pills-rec" role="tabpanel">
                 <div class="row g-3">
                     {% for r in reconocimientos %}
                     <div class="col-md-6">
@@ -442,9 +442,19 @@
                     {% for v in ventas_garage %}
                     <div class="col-md-6">
                         <div class="doc-card h-100">
-                             <div class="doc-preview">
+                             <div class="doc-preview position-relative">
+                                <span class="position-absolute top-0 start-0 m-2 badge bg-white shadow-sm {% if v.estado == 'Bueno' %}text-success{% else %}text-warning{% endif %}">
+                                    {{ v.estado }}
+                                </span>
+
                                 {% if v.final_url %}
                                     <a href="{{ v.final_url }}" target="_blank"><img src="{{ v.thumbnail }}" alt="Garage"></a>
+                                {% elif v.imagen %}
+                                    <img src="{{ v.imagen }}" alt="Garage">
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25">
+                                        <i class="bi bi-shop display-4"></i>
+                                    </div>
                                 {% endif %}
                             </div>
                             <div class="p-3">
