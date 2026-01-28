@@ -5,6 +5,28 @@
     <meta charset="UTF-8">
     <title>CV - {{ perfil.nombres }}</title>
     <link rel="stylesheet" href="{% static 'css/print_cv.css' %}">
+
+    {# Esto asegura que cada “Anexo” salga en página nueva en el PDF #}
+    <style>
+        .page-break {
+            page-break-before: always;
+            break-before: page;
+        }
+        .keep-together {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .doc-page {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
+        .annex-title {
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+    </style>
 </head>
 <body>
 
@@ -86,7 +108,7 @@
             <div class="main-block">
                 <div class="section-title">Experiencia Laboral</div>
                 {% for e in experiencias %}
-                <div class="experience-entry">
+                <div class="experience-entry keep-together">
                     <div class="exp-header">
                         <span class="role">{{ e.cargodesempenado }}</span>
                         <span class="date">
@@ -98,9 +120,10 @@
                     <div class="exp-desc">{{ e.descripcionfunciones|linebreaksbr }}</div>
                 </div>
 
+                {# ANEXO: Solo si hay páginas calculadas en doc_pages #}
                 {% if e.doc_pages %}
-                <div class="annex">
-                    <div class="annex-title">Anexo — Soporte / Certificado</div>
+                <div class="annex page-break">
+                    <div class="annex-title">Anexo — Soporte / Certificado (Experiencia)</div>
                     {% for page_url in e.doc_pages %}
                         <img src="{{ page_url }}" class="doc-page" alt="Documento">
                     {% endfor %}
@@ -115,7 +138,7 @@
             <div class="main-block">
                 <div class="section-title">Formación y Certificaciones</div>
                 {% for c in cursos %}
-                <div class="experience-entry">
+                <div class="experience-entry keep-together">
                     <div class="exp-header">
                         <span class="role">{{ c.nombrecurso }}</span>
                         <span class="date">{{ c.totalhoras }} Horas</span>
@@ -124,8 +147,8 @@
                 </div>
 
                 {% if c.doc_pages %}
-                <div class="annex">
-                    <div class="annex-title">Anexo — Certificado</div>
+                <div class="annex page-break">
+                    <div class="annex-title">Anexo — Certificado (Curso)</div>
                     {% for page_url in c.doc_pages %}
                         <img src="{{ page_url }}" class="doc-page" alt="Certificado">
                     {% endfor %}
@@ -140,7 +163,7 @@
             <div class="main-block">
                 <div class="section-title">Producción Académica</div>
                 {% for p in productos_academicos %}
-                <div class="experience-entry">
+                <div class="experience-entry keep-together">
                     <span class="role">{{ p.nombrerecurso }}</span>
                     <div class="company">{{ p.clasificador }}</div>
                     <div class="exp-desc">{{ p.descripcion }}</div>
@@ -153,7 +176,7 @@
             <div class="main-block">
                 <div class="section-title">Productos Laborales</div>
                 {% for p in productos_laborales %}
-                <div class="experience-entry">
+                <div class="experience-entry keep-together">
                     <div class="exp-header">
                         <span class="role">{{ p.nombreproducto }}</span>
                         <span class="date">{{ p.fechaproducto|date:"M Y" }}</span>
@@ -169,7 +192,7 @@
                 <div class="section-title">Reconocimientos</div>
                 <ul class="clean-list">
                     {% for r in reconocimientos %}
-                    <li>
+                    <li class="keep-together">
                         <span style="font-weight: bold; color: #0f172a;">{{ r.tiporeconocimiento }}</span>
                         — {{ r.entidadpatrocinadora }}
                         {% if r.descripcionreconocimiento %}
@@ -178,8 +201,8 @@
                     </li>
 
                     {% if r.doc_pages %}
-                    <div class="annex">
-                        <div class="annex-title">Anexo — Documento</div>
+                    <div class="annex page-break">
+                        <div class="annex-title">Anexo — Documento (Reconocimiento)</div>
                         {% for page_url in r.doc_pages %}
                             <img src="{{ page_url }}" class="doc-page" alt="Documento">
                         {% endfor %}

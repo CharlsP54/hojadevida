@@ -611,3 +611,25 @@ body {
 .info-box-label--tiny {
   font-size: 0.65rem;
 }
+
+
+.doc-box{ margin-top: 10px; }
+.doc-thumb{
+  width: 180px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  display: block;
+}
+.doc-actions{
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.btn-doc{
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  text-decoration: none;
+}

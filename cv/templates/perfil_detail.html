@@ -166,8 +166,14 @@
                             <div class="border rounded p-3 h-100 bg-white shadow-sm position-relative hover-shadow">
                                 <div class="preview-container">
                                     {% if e.archivo_digital %}
-                                        <img src="{{ e.file_thumb_url }}" class="preview-img" alt="Preview">
-                                        {% if e.file_is_pdf %}
+                                        <a href="{{ e.archivo_digital.url }}" target="_blank" rel="noopener">
+                                            {% if e.doc_pages %}
+                                                <img src="{{ e.doc_pages.0 }}" class="preview-img" alt="Preview">
+                                            {% else %}
+                                                <img src="{{ e.archivo_digital.url }}" class="preview-img" alt="Preview">
+                                            {% endif %}
+                                        </a>
+                                        {% if e.doc_is_pdf %}
                                             <span class="preview-badge">PDF</span>
                                         {% endif %}
                                     {% else %}
@@ -184,10 +190,10 @@
 
                                 <div class="d-grid gap-2 mt-auto">
                                     {% if e.archivo_digital %}
-                                        <a href="{{ e.file_view_url }}" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">Ver Documento</a>
+                                        <a href="{{ e.archivo_digital.url }}" target="_blank" rel="noopener" class="btn btn-outline-danger btn-sm fw-bold">Ver Documento</a>
                                     {% endif %}
                                     {% if e.rutacertificado %}
-                                        <a href="{{ e.rutacertificado }}" target="_blank" class="btn btn-outline-primary btn-sm fw-bold">Link Externo</a>
+                                        <a href="{{ e.rutacertificado }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-bold">Link Externo</a>
                                     {% endif %}
                                 </div>
                             </div>
@@ -208,8 +214,14 @@
                             <div class="border rounded p-3 h-100 bg-white shadow-sm position-relative hover-shadow">
                                 <div class="preview-container">
                                     {% if c.archivo_digital %}
-                                        <img src="{{ c.file_thumb_url }}" class="preview-img" alt="Preview">
-                                        {% if c.file_is_pdf %}
+                                        <a href="{{ c.archivo_digital.url }}" target="_blank" rel="noopener">
+                                            {% if c.doc_pages %}
+                                                <img src="{{ c.doc_pages.0 }}" class="preview-img" alt="Preview">
+                                            {% else %}
+                                                <img src="{{ c.archivo_digital.url }}" class="preview-img" alt="Preview">
+                                            {% endif %}
+                                        </a>
+                                        {% if c.doc_is_pdf %}
                                             <span class="preview-badge">PDF</span>
                                         {% endif %}
                                     {% else %}
@@ -227,10 +239,10 @@
 
                                 <div class="d-grid gap-2 mt-auto">
                                     {% if c.archivo_digital %}
-                                        <a href="{{ c.file_view_url }}" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">Ver Certificado</a>
+                                        <a href="{{ c.archivo_digital.url }}" target="_blank" rel="noopener" class="btn btn-outline-danger btn-sm fw-bold">Ver Certificado</a>
                                     {% endif %}
                                     {% if c.rutacertificado %}
-                                        <a href="{{ c.rutacertificado }}" target="_blank" class="btn btn-outline-primary btn-sm fw-bold">Validar</a>
+                                        <a href="{{ c.rutacertificado }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-bold">Validar</a>
                                     {% endif %}
                                 </div>
                             </div>
@@ -281,8 +293,14 @@
                             <div class="border rounded p-3 h-100 bg-white shadow-sm position-relative hover-shadow">
                                 <div class="preview-container">
                                     {% if r.archivo_digital %}
-                                        <img src="{{ r.file_thumb_url }}" class="preview-img" alt="Preview">
-                                        {% if r.file_is_pdf %}
+                                        <a href="{{ r.archivo_digital.url }}" target="_blank" rel="noopener">
+                                            {% if r.doc_pages %}
+                                                <img src="{{ r.doc_pages.0 }}" class="preview-img" alt="Preview">
+                                            {% else %}
+                                                <img src="{{ r.archivo_digital.url }}" class="preview-img" alt="Preview">
+                                            {% endif %}
+                                        </a>
+                                        {% if r.doc_is_pdf %}
                                             <span class="preview-badge">PDF</span>
                                         {% endif %}
                                     {% else %}
@@ -296,7 +314,10 @@
 
                                 <div class="d-grid gap-2 mt-auto">
                                     {% if r.archivo_digital %}
-                                        <a href="{{ r.file_view_url }}" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">Ver Documento</a>
+                                        <a href="{{ r.archivo_digital.url }}" target="_blank" rel="noopener" class="btn btn-outline-danger btn-sm fw-bold">Ver Documento</a>
+                                    {% endif %}
+                                    {% if r.rutacertificado %}
+                                        <a href="{{ r.rutacertificado }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-bold">Link Externo</a>
                                     {% endif %}
                                 </div>
                             </div>
@@ -317,8 +338,14 @@
                             <div class="border rounded p-3 h-100 bg-white shadow-sm position-relative hover-shadow">
                                 <div class="preview-container">
                                     {% if v.archivo_digital %}
-                                        <img src="{{ v.file_thumb_url }}" class="preview-img" alt="Preview">
-                                        {% if v.file_is_pdf %}
+                                        <a href="{{ v.archivo_digital.url }}" target="_blank" rel="noopener">
+                                            {% if v.doc_pages %}
+                                                <img src="{{ v.doc_pages.0 }}" class="preview-img" alt="Preview">
+                                            {% else %}
+                                                <img src="{{ v.archivo_digital.url }}" class="preview-img" alt="Preview">
+                                            {% endif %}
+                                        </a>
+                                        {% if v.doc_is_pdf %}
                                             <span class="preview-badge">PDF</span>
                                         {% endif %}
                                     {% elif v.imagen %}
@@ -347,7 +374,7 @@
 
                                 {% if v.archivo_digital %}
                                 <div class="d-grid gap-2 mt-3">
-                                    <a href="{{ v.file_view_url }}" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">Ver Archivo</a>
+                                    <a href="{{ v.archivo_digital.url }}" target="_blank" rel="noopener" class="btn btn-outline-danger btn-sm fw-bold">Ver Archivo</a>
                                 </div>
                                 {% endif %}
                             </div>
