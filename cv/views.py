@@ -3,18 +3,12 @@ import requests
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, Http404
 from django.template.loader import render_to_string
-from django.urls import reverse
 from weasyprint import HTML
 from pypdf import PdfWriter
 
 from .models import (
-    Datospersonales,
-    Experiencialaboral,
-    Cursosrealizados,
-    Productosacademicos,
-    Productoslaborales,
-    Reconocimientos,
-    Ventagarage,
+    Datospersonales, Experiencialaboral, Cursosrealizados,
+    Productosacademicos, Productoslaborales, Reconocimientos, Ventagarage
 )
 
 def _get_cloudinary_thumbnail(file_url):
@@ -26,17 +20,14 @@ def _get_cloudinary_thumbnail(file_url):
             if new_url.lower().endswith(".pdf"):
                 new_url = new_url[:-4] + ".jpg"
             return new_url
-    except Exception:
-        return file_url
+    except Exception: return file_url
     return file_url
 
 def _enrich_objects(objects):
     for obj in objects:
         url_final = None
-        if obj.archivo_digital:
-            url_final = obj.archivo_digital.url
-        elif getattr(obj, 'rutacertificado', None):
-            url_final = obj.rutacertificado
+        if obj.archivo_digital: url_final = obj.archivo_digital.url
+        elif getattr(obj, 'rutacertificado', None): url_final = obj.rutacertificado
 
         if url_final:
             obj.final_url = url_final
@@ -53,7 +44,6 @@ def doc_redirect(request, model, pk):
     ModelClass = MODELS.get(model)
     if not ModelClass: raise Http404("Modelo no encontrado")
     obj = get_object_or_404(ModelClass, pk=pk)
-    
     if obj.archivo_digital: return redirect(obj.archivo_digital.url)
     if getattr(obj, 'rutacertificado', None): return redirect(obj.rutacertificado)
     return redirect('home')
@@ -89,20 +79,26 @@ def perfil_detail(request, idperfil):
 
 def cv_print(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
+    
+    # 1. Filtros del Modal (LÓGICA ACTUALIZADA)
     from_modal = request.GET.get("from_modal") == "true"
     def check(key): return request.GET.get(key) is not None if from_modal else True
 
     show_exp = check("exp")
     show_edu = check("edu")
-    show_acad = check("acad")
-    show_lab = check("lab")
+    show_acad = check("acad") # ✅ Nuevo filtro
+    show_lab = check("lab")   # ✅ Nuevo filtro
     show_rec = check("rec")
     show_garage = check("garage") if from_modal else False 
 
+    # 2. Consultas Filtradas
     experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainiciogestion") if show_exp else []
     cursos = Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainicio") if show_edu else []
+    
+    # ✅ Filtrado correcto de productos
     prod_acad = Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_acad else []
     prod_lab = Productoslaborales.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_lab else []
+    
     reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_rec else []
     garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil, activo=True) if show_garage else []
     
@@ -110,6 +106,7 @@ def cv_print(request, idperfil):
     _enrich_objects(cursos)
     _enrich_objects(reconocimientos)
 
+    # 3. Generar PDF Principal
     context = {
         "perfil": perfil, "experiencias": experiencias, "cursos": cursos,
         "productos_academicos": prod_acad, "productos_laborales": prod_lab,
@@ -122,6 +119,7 @@ def cv_print(request, idperfil):
     html.write_pdf(main_buffer)
     main_buffer.seek(0)
 
+    # 4. Fusión de Anexos
     merger = PdfWriter()
     merger.append(main_buffer)
 
@@ -137,17 +135,22 @@ def cv_print(request, idperfil):
 
             if url_to_download:
                 try:
+                    # Descargamos el archivo
                     response = requests.get(url_to_download, timeout=15)
                     if response.status_code == 200:
-                        merger.append(io.BytesIO(response.content))
+                        # Lo metemos al merger como PÁGINA NUEVA
+                        remote_pdf = io.BytesIO(response.content)
+                        merger.append(remote_pdf)
                 except Exception as e:
                     print(f"Error uniendo PDF {url_to_download}: {e}")
 
+    # ✅ Aseguramos que se adjunten archivos de todas las secciones
     if show_edu: append_attachments(cursos)
     if show_exp: append_attachments(experiencias)
     if show_rec: append_attachments(reconocimientos)
     if show_garage: append_attachments(garage)
 
+    # 5. Salida Final
     output_buffer = io.BytesIO()
     merger.write(output_buffer)
     merger.close()
