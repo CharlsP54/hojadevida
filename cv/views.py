@@ -143,12 +143,29 @@ def perfil_detail(request, idperfil):
     """
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
-    experiencias = Experiencialaboral.objects.filter(idperfil=perfil).order_by("-fechainiciogestion")
-    cursos = Cursosrealizados.objects.filter(idperfil=perfil).order_by("-fechainicio")
-    productos_academicos = Productosacademicos.objects.filter(idperfil=perfil).order_by("-idproductosacademicos")
-    productos_laborales = Productoslaborales.objects.filter(idperfil=perfil).order_by("-fechaproducto")
-    reconocimientos = Reconocimientos.objects.filter(idperfil=perfil).order_by("-idreconocimiento")
-    ventas_garage = Ventagarage.objects.filter(idperfil=perfil).order_by("-fechapublicacion")
+    experiencias = Experiencialaboral.objects.filter(
+        idperfilconqueestaactivo=perfil
+    ).order_by("-fechainiciogestion")
+
+    cursos = Cursosrealizados.objects.filter(
+        idperfilconqueestaactivo=perfil
+    ).order_by("-fechainicio")
+
+    productos_academicos = Productosacademicos.objects.filter(
+        idperfilconqueestaactivo=perfil
+    ).order_by("-idproductoacademico")
+
+    productos_laborales = Productoslaborales.objects.filter(
+        idperfilconqueestaactivo=perfil
+    ).order_by("-fechaproducto")
+
+    reconocimientos = Reconocimientos.objects.filter(
+        idperfilconqueestaactivo=perfil
+    ).order_by("-fechareconocimiento")
+
+    ventas_garage = Ventagarage.objects.filter(
+        idperfilconqueestaactivo=perfil
+    ).order_by("-fechapublicacion")
 
     _enrich_with_doc_pages(experiencias)
     _enrich_with_doc_pages(cursos)
@@ -187,16 +204,36 @@ def cv_print(request, idperfil):
     include_rec = want("rec", True)
     include_garage = want("garage", False)
 
-    experiencias = Experiencialaboral.objects.filter(idperfil=perfil).order_by("-fechainiciogestion") if include_exp else []
-    cursos = Cursosrealizados.objects.filter(idperfil=perfil).order_by("-fechainicio") if include_edu else []
-    productos_academicos = Productosacademicos.objects.filter(idperfil=perfil).order_by("-idproductosacademicos") if include_acad else []
-    productos_laborales = Productoslaborales.objects.filter(idperfil=perfil).order_by("-fechaproducto") if include_lab else []
-    reconocimientos = Reconocimientos.objects.filter(idperfil=perfil).order_by("-idreconocimiento") if include_rec else []
-    ventas_garage = Ventagarage.objects.filter(idperfil=perfil).order_by("-fechapublicacion") if include_garage else []
+    experiencias = (
+        Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil).order_by("-fechainiciogestion")
+        if include_exp else []
+    )
+    cursos = (
+        Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil).order_by("-fechainicio")
+        if include_edu else []
+    )
+    productos_academicos = (
+        Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil).order_by("-idproductoacademico")
+        if include_acad else []
+    )
+    productos_laborales = (
+        Productoslaborales.objects.filter(idperfilconqueestaactivo=perfil).order_by("-fechaproducto")
+        if include_lab else []
+    )
+    reconocimientos = (
+        Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil).order_by("-fechareconocimiento")
+        if include_rec else []
+    )
+    ventas_garage = (
+        Ventagarage.objects.filter(idperfilconqueestaactivo=perfil).order_by("-fechapublicacion")
+        if include_garage else []
+    )
 
     _enrich_with_doc_pages(experiencias)
     _enrich_with_doc_pages(cursos)
     _enrich_with_doc_pages(reconocimientos)
+    # Si quieres anexos en garage, descomenta:
+    # _enrich_with_doc_pages(ventas_garage)
 
     context = {
         "perfil": perfil,
