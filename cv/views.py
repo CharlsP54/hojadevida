@@ -1,242 +1,200 @@
-import io
-import requests
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
-from django.template.loader import render_to_string
+# cv/views.py
 
-from weasyprint import HTML, CSS
-from django.contrib.staticfiles import finders
-from pypdf import PdfWriter
+from __future__ import annotations
+
+from io import BytesIO
+import requests
+from pypdf import PdfReader
+
+from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponseBadRequest
 
 from .models import (
     Datospersonales,
     Experiencialaboral,
     Cursosrealizados,
-    Reconocimientos,
     Productosacademicos,
     Productoslaborales,
-    Ventagarage
+    Reconocimientos,
+    Ventagaraje,
 )
 
-# =========================
-# Helpers Cloudinary URLs
-# =========================
-IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg")
 
-def _is_probably_image_url(url: str) -> bool:
-    u = (url or "").lower()
-    return u.endswith(IMAGE_EXTS)
+# ============================================================
+# Helpers: Cloudinary PDF -> imágenes por página (pg_1, pg_2...)
+# ============================================================
 
-def cloudinary_pdf_view_url(url: str) -> str:
+def _inject_cloudinary_transform(url: str, transform: str) -> str:
     """
-    Fuerza formato PDF si Cloudinary entrega URL sin extensión.
-    Si ya termina en .pdf, la deja igual.
+    Inserta transformaciones Cloudinary después de /upload/
+    Ej:
+    https://res.cloudinary.com/.../image/upload/v1/path/file.pdf
+    -> https://res.cloudinary.com/.../image/upload/<transform>/v1/path/file.pdf
     """
-    if not url:
-        return url
-    if url.lower().endswith(".pdf"):
-        return url
-    # Cloudinary acepta pedir formato por extensión
-    return url + ".pdf"
-
-def cloudinary_pdf_thumb_url(url: str) -> str:
-    """
-    Miniatura (página 1) como JPG usando transformación.
-    Inserta la transformación justo después de /upload/
-    y fuerza salida JPG.
-    """
-    if not url:
-        return url
-
-    # si ya trae transformaciones, igual funcionará, pero este método es simple
     marker = "/upload/"
     if marker not in url:
-        # fallback: al menos intenta JPG
-        return url + ".jpg"
+        return url
+    left, right = url.split(marker, 1)
+    return f"{left}{marker}{transform}/{right}"
 
-    # página 1, ajustar ancho, calidad auto, formato jpg
-    transform = "pg_1,w_700,c_fit,q_auto,f_jpg"
-    base = url.replace(marker, f"{marker}{transform}/", 1)
 
-    # fuerza salida jpg por extensión
-    if base.lower().endswith(".jpg"):
-        return base
-    return base + ".jpg"
-
-def annotate_media_for_preview(items, field_name="archivo_digital"):
+def _as_cloudinary_image_url(url: str) -> str:
     """
-    Agrega a cada item:
-      - item.file_is_pdf
-      - item.file_view_url
-      - item.file_thumb_url
-    Sin tocar tu modelo.
+    Si el archivo está como raw/upload, lo pasamos a image/upload para poder usar pg_1, f_jpg, etc.
     """
-    for it in items:
-        f = getattr(it, field_name, None)
-        if not f:
-            it.file_is_pdf = False
-            it.file_view_url = ""
-            it.file_thumb_url = ""
-            continue
+    return url.replace("/raw/upload/", "/image/upload/")
 
-        url = getattr(f, "url", "") or ""
-        name = (getattr(f, "name", "") or "").lower()
 
-        # Heurística:
-        # - si el name incluye .pdf -> PDF
-        # - si no, pero NO parece imagen -> intentamos tratarlo como PDF (porque certificados suelen ser PDF)
-        is_pdf = (".pdf" in name) or (url and not _is_probably_image_url(url))
+def _is_pdf_url(file_url: str) -> bool:
+    return bool(file_url) and ".pdf" in file_url.lower()
 
-        it.file_is_pdf = is_pdf
 
-        if is_pdf:
-            it.file_view_url = cloudinary_pdf_view_url(url)
-            it.file_thumb_url = cloudinary_pdf_thumb_url(url)
-        else:
-            it.file_view_url = url
-            it.file_thumb_url = url
+def _count_pdf_pages_from_url(file_url: str, timeout: int = 15) -> int:
+    """
+    Cuenta páginas descargando el PDF.
+    Si falla (timeout, permisos, etc.), devuelve 1.
+    """
+    try:
+        r = requests.get(file_url, timeout=timeout)
+        r.raise_for_status()
+        reader = PdfReader(BytesIO(r.content))
+        pages = len(reader.pages) or 1
+        return pages
+    except Exception:
+        return 1
 
+
+def _build_doc_pages(
+    file_url: str,
+    *,
+    max_pages: int = 20,
+    img_width: int = 1200,
+) -> tuple[bool, list[str]]:
+    """
+    Devuelve:
+    - is_pdf: True si es PDF
+    - pages_urls: lista de URLs (cada página renderizada como JPG por Cloudinary)
+      Si NO es PDF, devuelve [file_url] como única "página".
+    """
+    if not file_url:
+        return (False, [])
+
+    if not _is_pdf_url(file_url):
+        return (False, [file_url])
+
+    # Contar páginas (para meter "documento completo" en el PDF final)
+    pages = _count_pdf_pages_from_url(file_url)
+    pages = min(max(pages, 1), max_pages)
+
+    base_img_url = _as_cloudinary_image_url(file_url)
+
+    pages_urls: list[str] = []
+    for i in range(1, pages + 1):
+        # f_jpg -> convierte a imagen
+        # q_auto -> calidad automática
+        # w_1200,c_scale -> tamaño
+        # pg_i -> página i del PDF
+        transform = f"f_jpg,q_auto,w_{img_width},c_scale,pg_{i}"
+        pages_urls.append(_inject_cloudinary_transform(base_img_url, transform))
+
+    return (True, pages_urls)
+
+
+def _enrich_with_doc_pages(items, file_attr: str = "archivo_digital"):
+    """
+    Agrega atributos dinámicos a cada objeto:
+      - obj.doc_is_pdf (bool)
+      - obj.doc_pages (list[str])  # si pdf => páginas como imágenes, si imagen => [url]
+    """
+    for obj in items:
+        f = getattr(obj, file_attr, None)
+        file_url = getattr(f, "url", "") if f else ""
+        is_pdf, pages_urls = _build_doc_pages(file_url)
+        obj.doc_is_pdf = is_pdf
+        obj.doc_pages = pages_urls
     return items
 
 
-# =========================================
-# 1. VISTA HOME
-# =========================================
-def home(request):
-    perfil = Datospersonales.objects.filter(perfilactivo=1).first()
-    if not perfil:
-        perfil = Datospersonales.objects.first()
+# ============================================
+# Views
+# ============================================
 
-    if perfil:
-        return redirect('cv_detail', idperfil=perfil.idperfil)
-    return HttpResponse("<h1>No hay perfiles creados en la Base de Datos.</h1>")
-
-
-# =========================================
-# 2. VISTA DASHBOARD WEB
-# =========================================
-def cv_detail(request, idperfil):
+def perfil_detail(request, idperfil):
+    """
+    Dashboard principal (tu perfil_detail.html)
+    """
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
-    experiencias = list(Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil))
-    cursos = list(Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil))
-    reconocimientos = list(Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil))
-    productos_academicos = Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil)
-    productos_laborales = Productoslaborales.objects.filter(idperfilconqueestaactivo=perfil)
-    ventas_garage = list(Ventagarage.objects.filter(idperfilconqueestaactivo=perfil))
+    experiencias = Experiencialaboral.objects.filter(idperfil=perfil).order_by("-fechainiciogestion")
+    cursos = Cursosrealizados.objects.filter(idperfil=perfil).order_by("-fechainicio")
+    productos_academicos = Productosacademicos.objects.filter(idperfil=perfil).order_by("-idproductosacademicos")
+    productos_laborales = Productoslaborales.objects.filter(idperfil=perfil).order_by("-fechaproducto")
+    reconocimientos = Reconocimientos.objects.filter(idperfil=perfil).order_by("-idreconocimiento")
+    ventas_garage = Ventagaraje.objects.filter(idperfil=perfil).order_by("-fechapublicacion")
 
-    # 🔥 Esto arregla miniaturas + link "Ver Certificado" en Cloudinary
-    annotate_media_for_preview(experiencias, "archivo_digital")
-    annotate_media_for_preview(cursos, "archivo_digital")
-    annotate_media_for_preview(reconocimientos, "archivo_digital")
-    annotate_media_for_preview(ventas_garage, "archivo_digital")
+    # Esto NO es obligatorio para tu HTML actual, pero ayuda si luego quieres usar doc_pages ahí también.
+    # Si no lo usas, no afecta.
+    _enrich_with_doc_pages(experiencias)
+    _enrich_with_doc_pages(cursos)
+    _enrich_with_doc_pages(reconocimientos)
 
     context = {
-        'perfil': perfil,
-        'experiencias': experiencias,
-        'cursos': cursos,
-        'reconocimientos': reconocimientos,
-        'productos_academicos': productos_academicos,
-        'productos_laborales': productos_laborales,
-        'ventas_garage': ventas_garage,
+        "perfil": perfil,
+        "experiencias": experiencias,
+        "cursos": cursos,
+        "productos_academicos": productos_academicos,
+        "productos_laborales": productos_laborales,
+        "reconocimientos": reconocimientos,
+        "ventas_garage": ventas_garage,
     }
+    return render(request, "perfil_detail.html", context)
 
-    return render(request, 'perfil_detail.html', context)
 
-
-# =========================================
-# 3. VISTA PDF FUSIONADO
-# =========================================
 def cv_print(request, idperfil):
+    """
+    Exporta PDF del CV (cv_print.html) incluyendo anexos:
+      - Si hay archivo_digital PDF, mete TODAS las páginas dentro del PDF final (como imágenes).
+    """
+
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
-    # 1) Filtros
-    show_exp = request.GET.get('exp') is not None
-    show_edu = request.GET.get('edu') is not None
-    show_acad = request.GET.get('acad') is not None
-    show_lab = request.GET.get('lab') is not None
-    show_rec = request.GET.get('rec') is not None
-    show_garage = request.GET.get('garage') is not None
+    # Helpers para el modal:
+    # Si el modal está activo (from_modal=true), los checkboxes no marcados NO vienen en GET.
+    def want(key: str, default: bool):
+        if request.GET.get("from_modal") == "true":
+            return key in request.GET
+        return default
 
-    # por defecto todo activo excepto garage
-    if not request.GET:
-        show_exp = show_edu = show_acad = show_lab = show_rec = True
-        show_garage = False
+    include_exp = want("exp", True)
+    include_edu = want("edu", True)
+    include_acad = want("acad", True)
+    include_lab = want("lab", True)
+    include_rec = want("rec", True)
+    include_garage = want("garage", False)
 
-    # 2) Querysets
-    experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil) if show_exp else []
-    cursos = Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil) if show_edu else []
-    reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil) if show_rec else []
-    productos_academicos = Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil) if show_acad else []
-    productos_laborales = Productoslaborales.objects.filter(idperfilconqueestaactivo=perfil) if show_lab else []
-    ventas_garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil) if show_garage else []
+    experiencias = Experiencialaboral.objects.filter(idperfil=perfil).order_by("-fechainiciogestion") if include_exp else []
+    cursos = Cursosrealizados.objects.filter(idperfil=perfil).order_by("-fechainicio") if include_edu else []
+    productos_academicos = Productosacademicos.objects.filter(idperfil=perfil).order_by("-idproductosacademicos") if include_acad else []
+    productos_laborales = Productoslaborales.objects.filter(idperfil=perfil).order_by("-fechaproducto") if include_lab else []
+    reconocimientos = Reconocimientos.objects.filter(idperfil=perfil).order_by("-idreconocimiento") if include_rec else []
+    ventas_garage = Ventagaraje.objects.filter(idperfil=perfil).order_by("-fechapublicacion") if include_garage else []
+
+    # IMPORTANTÍSIMO:
+    # Esto hace que en el PDF final puedas imprimir el certificado COMPLETO (páginas)
+    _enrich_with_doc_pages(experiencias)
+    _enrich_with_doc_pages(cursos)
+    _enrich_with_doc_pages(reconocimientos)
+
+    # Si en garage guardas archivos también, descomenta:
+    # _enrich_with_doc_pages(ventas_garage)
 
     context = {
-        'perfil': perfil,
-        'experiencias': experiencias,
-        'cursos': cursos,
-        'reconocimientos': reconocimientos,
-        'productos_academicos': productos_academicos,
-        'productos_laborales': productos_laborales,
-        'ventas_garage': ventas_garage,
+        "perfil": perfil,
+        "experiencias": experiencias,
+        "cursos": cursos,
+        "productos_academicos": productos_academicos,
+        "productos_laborales": productos_laborales,
+        "reconocimientos": reconocimientos,
+        "ventas_garage": ventas_garage,
     }
-
-    # 3) Render HTML
-    html_string = render_to_string('cv_print.html', context)
-    base_url = request.build_absolute_uri('/')
-    html = HTML(string=html_string, base_url=base_url)
-
-    css_path = finders.find("css/print_cv.css")
-    stylesheets = [CSS(filename=css_path)] if css_path else []
-
-    # PDF base
-    cv_buffer = io.BytesIO()
-    html.write_pdf(target=cv_buffer, stylesheets=stylesheets)
-    cv_buffer.seek(0)
-
-    # 4) Merge con anexos
-    merger = PdfWriter()
-    merger.append(cv_buffer)
-
-    def anexar_certificados(queryset):
-        for item in queryset:
-            f = getattr(item, "archivo_digital", None)
-            if not f:
-                continue
-
-            try:
-                url = getattr(f, "url", None)
-                if not url:
-                    continue
-
-                # Forzar PDF si Cloudinary no pone extensión
-                pdf_url = cloudinary_pdf_view_url(url)
-
-                # Solo anexar si realmente es PDF (por heurística simple)
-                if not pdf_url.lower().endswith(".pdf"):
-                    continue
-
-                r = requests.get(pdf_url, timeout=30)
-                r.raise_for_status()
-                merger.append(io.BytesIO(r.content))
-
-            except Exception as e:
-                print(f"Error anexando certificado: {e}")
-
-    if show_edu:
-        anexar_certificados(cursos)
-    if show_exp:
-        anexar_certificados(experiencias)
-    if show_rec:
-        anexar_certificados(reconocimientos)
-
-    # 5) Salida
-    output_buffer = io.BytesIO()
-    merger.write(output_buffer)
-    merger.close()
-    output_buffer.seek(0)
-
-    response = HttpResponse(output_buffer.getvalue(), content_type='application/pdf')
-    filename = f"CV_{perfil.nombres or 'perfil'}.pdf"
-    response['Content-Disposition'] = f'inline; filename="{filename}"'
-    return response
+    return render(request, "cv_print.html", context)
