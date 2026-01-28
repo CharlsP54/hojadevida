@@ -16,9 +16,8 @@ from .models import (
     Reconocimientos,
     Productosacademicos,
     Productoslaborales,
-    Ventagarage
+    Ventagarage,
 )
-
 
 # =========================================
 # 1. VISTA HOME
@@ -40,6 +39,7 @@ def home(request):
 def cv_detail(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
+    # (Opcional) si quieres filtrar solo lo activo en front:
     experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil)
     cursos = Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil)
     reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil)
@@ -56,12 +56,11 @@ def cv_detail(request, idperfil):
         "productos_laborales": productos_laborales,
         "ventas_garage": ventas_garage,
     }
-
     return render(request, "perfil_detail.html", context)
 
 
 # =========================================
-# 3. VISTA PDF FUSIONADO + CERTIFICADOS (Cloudinary-friendly)
+# 3. VISTA PDF FUSIONADO
 # =========================================
 def cv_print(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
@@ -74,10 +73,10 @@ def cv_print(request, idperfil):
     show_rec = request.GET.get("rec") is not None
     show_garage = request.GET.get("garage") is not None
 
-    # Botón azul directo: por defecto todo activo excepto garage
+    # Botón azul directo (sin parámetros): por defecto todo activo excepto garage
     if not request.GET:
         show_exp = show_edu = show_acad = show_lab = show_rec = True
-        show_garage = False  # ponlo True si quieres incluir garage por defecto
+        show_garage = False  # ponlo True si quieres
 
     # 2) Querysets
     experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil) if show_exp else []
@@ -99,12 +98,11 @@ def cv_print(request, idperfil):
 
     # 3) Render HTML del template
     html_string = render_to_string("cv_print.html", context)
+    base_url = request.build_absolute_uri("/")  # ayuda a resolver /static
 
-    # base_url ayuda a resolver rutas (/static, etc.)
-    base_url = request.build_absolute_uri("/")
     html = HTML(string=html_string, base_url=base_url)
 
-    # 4) CSS por filesystem (lo más estable en Render)
+    # ✅ CSS por filesystem (estable en Render)
     css_path = finders.find("css/print_cv.css")
     stylesheets = [CSS(filename=css_path)] if css_path else []
 
@@ -113,40 +111,27 @@ def cv_print(request, idperfil):
     html.write_pdf(target=cv_buffer, stylesheets=stylesheets)
     cv_buffer.seek(0)
 
-    # 5) Fusionar con PyPDF
+    # 4) Fusión con PyPDF
     merger = PdfWriter()
     merger.append(cv_buffer)
 
-    # ---- helper: anexar PDFs desde URL (Cloudinary) o desde path (local) ----
     def anexar_certificados(queryset):
         for item in queryset:
             f = getattr(item, "archivo_digital", None)
             if not f:
                 continue
 
-            # Solo PDFs
             try:
-                name = (getattr(f, "name", "") or "").lower()
-                url = (getattr(f, "url", "") or "")
-                if not (name.endswith(".pdf") or url.lower().endswith(".pdf")):
+                url = f.url  # Cloudinary URL (o media url en local)
+                if not url or not url.lower().endswith(".pdf"):
                     continue
 
-                # 1) Si el storage tiene path local, intenta anexar directo (local dev)
-                try:
-                    file_path = f.path  # puede fallar en Cloudinary
-                    merger.append(file_path)
-                    continue
-                except Exception:
-                    pass
-
-                # 2) En Cloudinary: descargar desde URL y anexar
-                if url:
-                    r = requests.get(url, timeout=45)
-                    r.raise_for_status()
-                    merger.append(io.BytesIO(r.content))
+                r = requests.get(url, timeout=30)
+                r.raise_for_status()
+                merger.append(io.BytesIO(r.content))
 
             except Exception as e:
-                print(f"Error anexando certificado: {e}")
+                print(f"Error anexando certificado desde URL: {e}")
 
     if show_edu:
         anexar_certificados(cursos)
@@ -155,7 +140,7 @@ def cv_print(request, idperfil):
     if show_rec:
         anexar_certificados(reconocimientos)
 
-    # 6) Salida final
+    # 5) Salida
     output_buffer = io.BytesIO()
     merger.write(output_buffer)
     merger.close()
