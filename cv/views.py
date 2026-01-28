@@ -1,13 +1,16 @@
+# cv/views.py
 from __future__ import annotations
 
-from io import BytesIO
 import re
+from urllib.parse import urlparse
+from io import BytesIO
+
 import requests
 from pypdf import PdfReader
 
 from django.shortcuts import get_object_or_404, render, redirect
-from django.urls import reverse
-from django.http import Http404
+
+from cloudinary.utils import cloudinary_url  # <-- IMPORTANTE
 
 from .models import (
     Datospersonales,
@@ -19,227 +22,222 @@ from .models import (
     Ventagarage,
 )
 
-# Cloudinary (para firmar URLs si tu cuenta exige signed/strict transformations)
-try:
-    import cloudinary
-    from cloudinary.utils import cloudinary_url
-except Exception:  # pragma: no cover
-    cloudinary_url = None
-
-
 # ============================================================
-# Cloudinary helpers (firmar + transformar)
+# Cloudinary helpers (soporta URLs protegidas con firma)
 # ============================================================
 
-_CLOUDINARY_HOST_RE = re.compile(r"^https?://res\.cloudinary\.com/[^/]+/")
+_CLOUDINARY_HOST = "res.cloudinary.com"
+_RE_VERSION = re.compile(r"^v\d+$")
 
-def _is_cloudinary(url: str) -> bool:
-    return bool(url) and bool(_CLOUDINARY_HOST_RE.match(url))
+def _parse_cloudinary(file_url: str):
+    """
+    Parsea URLs tipo:
+    https://res.cloudinary.com/<cloud>/<resource_type>/<delivery_type>/upload/.../v123/<public_id>.<ext>
 
-def _parse_cloudinary_parts(url: str):
+    Devuelve:
+      (resource_type, delivery_type, public_id, ext|None)
     """
-    Devuelve (resource_type, delivery_type, public_id, ext)
-    Soporta URLs tipo:
-      https://res.cloudinary.com/<cloud>/<resource>/<type>/.../v123/folder/name.pdf
-      https://res.cloudinary.com/<cloud>/<resource>/<type>/<transformations>/v123/folder/name
-    """
-    # ejemplo: /image/upload/...
-    m = re.search(r"/(image|raw|video)/(upload|authenticated|private)/", url)
-    if not m:
+    if not file_url:
         return None
 
-    resource_type, delivery_type = m.group(1), m.group(2)
-
-    right = url.split(f"/{resource_type}/{delivery_type}/", 1)[1]  # lo que viene después
-
-    # Quitar firma querystring
-    right = right.split("?", 1)[0]
-
-    # Separar por '/'
-    parts = [p for p in right.split("/") if p]
-
-    # Si hay transformación(s) van antes de v123...
-    # Ej: f_jpg,q_auto,w_1200,c_scale,pg_1/v123/...
-    while parts and ("," in parts[0] or "_" in parts[0] and parts[0].startswith(("c_", "w_", "q_", "f_"))):
-        parts.pop(0)
-
-    # Quitar versión v123 si existe
-    if parts and re.match(r"^v\d+$", parts[0]):
-        parts.pop(0)
-
-    if not parts:
+    u = urlparse(file_url)
+    if _CLOUDINARY_HOST not in (u.netloc or ""):
         return None
 
-    # public_id es todo lo restante (incluye carpetas)
-    public_path = "/".join(parts)
+    path = (u.path or "").lstrip("/")
+    parts = path.split("/")
+    if len(parts) < 5:
+        return None
 
-    # detectar extensión
-    ext = None
-    if "." in parts[-1]:
-        base, ext = parts[-1].rsplit(".", 1)
-        parts[-1] = base
-        public_id = "/".join(parts)
+    # parts[0] = cloud_name
+    resource_type = parts[1]  # image/raw/video
+    delivery_type = parts[2]  # upload / authenticated / private / etc
+
+    # ubicamos "upload"
+    try:
+        upos = parts.index("upload")
+    except ValueError:
+        return None
+
+    after = parts[upos + 1 :]
+
+    # Saltar transformaciones hasta encontrar v123
+    vpos = None
+    for i, seg in enumerate(after):
+        if _RE_VERSION.match(seg):
+            vpos = i
+            break
+
+    public_parts = after[vpos + 1 :] if vpos is not None else after
+    public_path = "/".join(public_parts)
+
+    # extraer extensión si existe
+    last = public_path.split("/")[-1]
+    if "." in last:
+        base, ext = public_path.rsplit(".", 1)
+        public_id = base
+        fmt = ext
     else:
         public_id = public_path
+        fmt = None
 
-    return (resource_type, delivery_type, public_id, ext)
+    return (resource_type, delivery_type, public_id, fmt)
 
-
-def _cloudinary_signed_original(url: str) -> str:
-    """
-    Devuelve URL firmada (si cloudinary_url está disponible), si no, devuelve la original.
-    """
-    if not _is_cloudinary(url) or cloudinary_url is None:
-        return url
-
-    parsed = _parse_cloudinary_parts(url)
-    if not parsed:
-        return url
-
-    resource_type, delivery_type, public_id, ext = parsed
-
-    # Si ext existe, la pasamos como format para reconstruir
-    # (si no, Cloudinary igual sirve, pero esto ayuda)
-    built, _ = cloudinary_url(
+def _signed_cloudinary(public_id: str, *, resource_type: str, delivery_type: str, fmt: str | None, transformation=None) -> str:
+    url, _ = cloudinary_url(
         public_id,
         resource_type=resource_type,
         type=delivery_type,
-        format=ext,
+        format=fmt,
         secure=True,
         sign_url=True,
-    )
-    return built
-
-
-def _cloudinary_signed_transform(
-    url: str,
-    *,
-    transformation: list[dict],
-    out_format: str | None = None,
-) -> str:
-    """
-    Genera URL firmada con transformación.
-    """
-    if not _is_cloudinary(url) or cloudinary_url is None:
-        return ""  # si no es cloudinary, lo manejamos con fallback fuera
-
-    parsed = _parse_cloudinary_parts(url)
-    if not parsed:
-        return ""
-
-    resource_type, delivery_type, public_id, ext = parsed
-
-    built, _ = cloudinary_url(
-        public_id,
-        resource_type=resource_type,
-        type=delivery_type,
-        format=out_format,          # extensión de salida (ej: jpg)
         transformation=transformation,
-        secure=True,
-        sign_url=True,              # <-- CLAVE para evitar 401 en strict transformations
     )
-    return built
+    return url
 
-
-# ============================================================
-# Helpers: PDF -> páginas/miniatura
-# ============================================================
-
-def _is_pdf_url(file_url: str) -> bool:
-    return bool(file_url) and ".pdf" in file_url.lower()
+def _is_pdf_field(file_field) -> bool:
+    if not file_field:
+        return False
+    name = (getattr(file_field, "name", "") or "").lower()
+    url = (getattr(file_field, "url", "") or "").lower()
+    return name.endswith(".pdf") or url.endswith(".pdf") or ".pdf" in name or ".pdf" in url
 
 def _count_pdf_pages_from_url(file_url: str, timeout: int = 15) -> int:
+    """
+    Ojo: si Cloudinary exige firma, aquí debemos contar usando URL firmada.
+    """
     try:
         r = requests.get(file_url, timeout=timeout)
         r.raise_for_status()
         reader = PdfReader(BytesIO(r.content))
-        return max(len(reader.pages), 1)
+        return max(1, len(reader.pages) or 1)
     except Exception:
         return 1
 
-def _build_doc_pages_and_thumb(
-    file_url: str,
-    *,
-    max_pages: int = 20,
-    img_width: int = 1200,
-    thumb_width: int = 650,
-):
+def _build_urls_for_file(file_field):
     """
-    Retorna:
-      is_pdf, pages_urls, thumb_url, view_url
-    - view_url: URL del archivo “tal cual” (firmada si hace falta).
-    - thumb_url: para tarjetas (PDF->pg1 jpg, imagen->misma imagen con resize si possible)
-    - pages_urls: para anexos en cv_print (PDF->pg_i jpg, imagen-> [imagen])
+    Devuelve:
+      (is_pdf, view_url, thumb_url)
     """
-    if not file_url:
-        return (False, [], "", "")
+    if not file_field:
+        return (False, "", "")
 
-    # URL para “ver documento” (solo PDF/imagen)
-    view_url = _cloudinary_signed_original(file_url)
+    raw_url = getattr(file_field, "url", "") or ""
+    is_pdf = _is_pdf_field(file_field)
 
-    # Si NO es PDF, tratamos como imagen/archivo directo
-    if not _is_pdf_url(file_url):
-        # miniatura: si es cloudinary intentamos firmar un resize, si no, usamos la misma
-        thumb = _cloudinary_signed_transform(
-            file_url,
-            transformation=[{"fetch_format": "auto", "quality": "auto", "width": thumb_width, "crop": "fit"}],
-            out_format=None,
-        ) or view_url
-        return (False, [view_url], thumb, view_url)
+    parsed = _parse_cloudinary(raw_url)
+    if not parsed:
+        # No es cloudinary -> usamos url directo
+        return (is_pdf, raw_url, raw_url)
 
-    # PDF: miniatura + páginas
-    # Miniatura (página 1)
-    thumb = _cloudinary_signed_transform(
-        file_url,
-        transformation=[{"fetch_format": "jpg", "quality": "auto", "width": thumb_width, "crop": "scale", "page": 1}],
-        out_format="jpg",
+    resource_type, delivery_type, public_id, fmt = parsed
+
+    # VIEW (abrir solo el documento)
+    if is_pdf:
+        # fuerza formato pdf aunque en la URL no venga extensión
+        view_url = _signed_cloudinary(
+            public_id,
+            resource_type=resource_type,   # suele ser raw o image según cómo suba el storage
+            delivery_type=delivery_type,
+            fmt="pdf",
+            transformation=None,
+        )
+        # THUMB (miniatura estable: página 1 -> jpg)
+        thumb_url = _signed_cloudinary(
+            public_id,
+            resource_type="image",
+            delivery_type=delivery_type,
+            fmt="jpg",
+            transformation=[{"page": 1}, {"width": 900, "crop": "scale"}, {"quality": "auto"}, {"fetch_format": "jpg"}],
+        )
+        return (True, view_url, thumb_url)
+
+    # si es imagen
+    view_url = _signed_cloudinary(
+        public_id,
+        resource_type=resource_type,
+        delivery_type=delivery_type,
+        fmt=fmt,
+        transformation=None,
+    )
+    thumb_url = _signed_cloudinary(
+        public_id,
+        resource_type="image",
+        delivery_type=delivery_type,
+        fmt=(fmt or "jpg"),
+        transformation=[{"width": 900, "crop": "fill"}, {"quality": "auto"}],
+    )
+    return (False, view_url, thumb_url)
+
+def _build_doc_pages(file_field, *, max_pages: int = 20, img_width: int = 1200):
+    """
+    Para export (cv_print): si es PDF -> devuelve lista de URLs de páginas como JPG (firmadas).
+    """
+    if not file_field:
+        return (False, [])
+
+    raw_url = getattr(file_field, "url", "") or ""
+    is_pdf = _is_pdf_field(file_field)
+    if not is_pdf:
+        return (False, [raw_url] if raw_url else [])
+
+    parsed = _parse_cloudinary(raw_url)
+    if not parsed:
+        # Sin cloudinary, no podemos renderizar páginas fácilmente
+        return (True, [])
+
+    resource_type, delivery_type, public_id, _fmt = parsed
+
+    # Para contar páginas, usamos URL firmada del PDF
+    pdf_url_signed = _signed_cloudinary(
+        public_id,
+        resource_type=resource_type,
+        delivery_type=delivery_type,
+        fmt="pdf",
+        transformation=None,
     )
 
-    # Páginas (para anexos)
-    pages = _count_pdf_pages_from_url(view_url)
+    pages = _count_pdf_pages_from_url(pdf_url_signed)
     pages = min(max(pages, 1), max_pages)
 
-    pages_urls = []
+    urls = []
     for i in range(1, pages + 1):
-        u = _cloudinary_signed_transform(
-            file_url,
-            transformation=[{"fetch_format": "jpg", "quality": "auto", "width": img_width, "crop": "scale", "page": i}],
-            out_format="jpg",
+        page_url = _signed_cloudinary(
+            public_id,
+            resource_type="image",
+            delivery_type=delivery_type,
+            fmt="jpg",
+            transformation=[{"page": i}, {"width": img_width, "crop": "scale"}, {"quality": "auto"}, {"fetch_format": "jpg"}],
         )
-        if u:
-            pages_urls.append(u)
+        urls.append(page_url)
 
-    # Si por alguna razón cloudinary_url no generó nada, dejamos vacío (no revienta)
-    return (True, pages_urls, thumb or "", view_url)
+    return (True, urls)
 
-
-def _enrich_items(items, *, model_key: str, file_attr: str = "archivo_digital"):
+def _enrich_items(items, file_attr: str = "archivo_digital"):
     """
-    Agrega a cada obj:
-      - file_is_pdf
-      - file_thumb_url
-      - file_view_url  (ruta interna /cv/doc/<model>/<pk>/)
-      - doc_pages       (para anexos en cv_print)
+    Inyecta en cada obj:
+      obj.file_is_pdf
+      obj.file_view_url
+      obj.file_thumb_url
+      obj.doc_pages
     """
     for obj in items:
         f = getattr(obj, file_attr, None)
-        file_url = getattr(f, "url", "") if f else ""
 
-        is_pdf, pages, thumb, view = _build_doc_pages_and_thumb(file_url)
-
+        is_pdf, view_url, thumb_url = _build_urls_for_file(f)
         obj.file_is_pdf = is_pdf
-        obj.file_thumb_url = thumb
-        obj.doc_pages = pages
+        obj.file_view_url = view_url
+        obj.file_thumb_url = thumb_url
 
-        # Link interno “Ver Documento” (evita exponer cloudinary directo y permite firmar siempre)
-        obj.file_view_url = reverse("cv_doc", kwargs={"model": model_key, "pk": obj.pk})
+        doc_is_pdf, doc_pages = _build_doc_pages(f)
+        obj.doc_is_pdf = doc_is_pdf
+        obj.doc_pages = doc_pages
 
     return items
 
-
-# ============================================================
+# ============================================
 # Views
-# ============================================================
+# ============================================
 
 def cv_home(request):
     perfil = (
@@ -251,35 +249,6 @@ def cv_home(request):
     if perfil:
         return redirect("cv_detail", idperfil=perfil.idperfil)
     return render(request, "sin_datos.html")
-
-
-def sin_datos(request):
-    return render(request, "sin_datos.html")
-
-
-def doc_redirect(request, model: str, pk: int):
-    """
-    Abre SOLO el archivo (PDF/imagen) en una pestaña.
-    Si Cloudinary exige firma, aquí devolvemos URL firmada.
-    """
-    model_map = {
-        "exp": (Experiencialaboral, "archivo_digital"),
-        "cur": (Cursosrealizados, "archivo_digital"),
-        "rec": (Reconocimientos, "archivo_digital"),
-        "gar": (Ventagarage, "archivo_digital"),
-    }
-    if model not in model_map:
-        raise Http404("Documento no encontrado")
-
-    Model, field_name = model_map[model]
-    obj = get_object_or_404(Model, pk=pk)
-
-    f = getattr(obj, field_name, None)
-    file_url = getattr(f, "url", "") if f else ""
-    if not file_url:
-        raise Http404("Sin archivo")
-
-    return redirect(_cloudinary_signed_original(file_url))
 
 
 def perfil_detail(request, idperfil):
@@ -315,11 +284,11 @@ def perfil_detail(request, idperfil):
         activo=True,
     ).order_by("-fechapublicacion")
 
-    # Enriquecer para miniaturas + ver documento + anexos
-    _enrich_items(experiencias, model_key="exp")
-    _enrich_items(cursos, model_key="cur")
-    _enrich_items(reconocimientos, model_key="rec")
-    _enrich_items(ventas_garage, model_key="gar")
+    # ✅ Miniaturas + Ver PDF + doc_pages (firmado)
+    _enrich_items(experiencias)
+    _enrich_items(cursos)
+    _enrich_items(reconocimientos)
+    _enrich_items(ventas_garage)
 
     context = {
         "perfil": perfil,
@@ -396,11 +365,11 @@ def cv_print(request, idperfil):
         if include_garage else []
     )
 
-    # Anexos (páginas de PDF como imágenes)
-    _enrich_items(experiencias, model_key="exp")
-    _enrich_items(cursos, model_key="cur")
-    _enrich_items(reconocimientos, model_key="rec")
-    _enrich_items(ventas_garage, model_key="gar")
+    # ✅ doc_pages firmadas (para anexos en el PDF)
+    _enrich_items(experiencias)
+    _enrich_items(cursos)
+    _enrich_items(reconocimientos)
+    _enrich_items(ventas_garage)
 
     context = {
         "perfil": perfil,
@@ -412,3 +381,7 @@ def cv_print(request, idperfil):
         "ventas_garage": ventas_garage,
     }
     return render(request, "cv_print.html", context)
+
+
+def sin_datos(request):
+    return render(request, "sin_datos.html")

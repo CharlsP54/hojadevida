@@ -2,6 +2,17 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import date
 
+
+
+import os
+import uuid
+
+def short_upload(prefix: str):
+    def _path(instance, filename):
+        ext = os.path.splitext(filename)[1].lower()  # .pdf, .jpg, etc
+        return f"{prefix}/{uuid.uuid4().hex}{ext}"
+    return _path
+
 # =========================
 # VALIDADORES (Lógica de Negocio)
 # =========================
@@ -94,11 +105,12 @@ class Experiencialaboral(CleanSaveMixin, models.Model):
 
     # Archivo (PDF/IMG)
     archivo_digital = models.FileField(
-        upload_to="certificados/experiencia/",
+        upload_to=short_upload("certificados/experiencia"),
         blank=True,
         null=True,
         verbose_name="Subir PDF/Imagen",
     )
+
 
     idperfilconqueestaactivo = models.ForeignKey(
         Datospersonales,
@@ -141,11 +153,12 @@ class Cursosrealizados(CleanSaveMixin, models.Model):
     rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
 
     archivo_digital = models.FileField(
-        upload_to="certificados/cursos/",
+        upload_to=short_upload("certificados/cursos"),
         blank=True,
         null=True,
         verbose_name="Subir PDF/Imagen",
     )
+
 
     idperfilconqueestaactivo = models.ForeignKey(
         Datospersonales,
@@ -185,11 +198,12 @@ class Reconocimientos(CleanSaveMixin, models.Model):
     rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
 
     archivo_digital = models.FileField(
-        upload_to="certificados/logros/",
+        upload_to=short_upload("certificados/logros"),
         blank=True,
         null=True,
         verbose_name="Subir PDF/Imagen",
     )
+
 
     idperfilconqueestaactivo = models.ForeignKey(
         Datospersonales,
@@ -276,11 +290,12 @@ class Ventagarage(CleanSaveMixin, models.Model):
     activo = models.BooleanField(default=True)
 
     archivo_digital = models.FileField(
-        upload_to="garage/",
+        upload_to=short_upload("garage"),
         blank=True,
         null=True,
         verbose_name="Foto Real del Producto",
     )
+
 
     idperfilconqueestaactivo = models.ForeignKey(
         Datospersonales,
