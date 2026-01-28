@@ -6,7 +6,7 @@ from io import BytesIO
 import requests
 from pypdf import PdfReader
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.http import HttpResponseBadRequest
 
 from .models import (
@@ -119,6 +119,24 @@ def _enrich_with_doc_pages(items, file_attr: str = "archivo_digital"):
 # Views
 # ============================================
 
+def cv_home(request):
+    """
+    /cv/ -> si hay perfil marcado para verse en front, redirige a /cv/<idperfil>/
+    si no, muestra sin_datos.html
+    """
+    perfil = (
+        Datospersonales.objects
+        .filter(activarparaqueseveaenfront=True)
+        .order_by("idperfil")
+        .first()
+    )
+
+    if perfil:
+        return redirect("cv_detail", idperfil=perfil.idperfil)
+
+    return render(request, "sin_datos.html")
+
+
 def perfil_detail(request, idperfil):
     """
     Dashboard principal (tu perfil_detail.html)
@@ -194,7 +212,7 @@ def cv_print(request, idperfil):
 
 def sin_datos(request):
     """
-    Página base para /cv/ (sin idperfil).
+    Página base cuando no hay perfiles activos.
     Usa tu template existente: sin_datos.html
     """
     return render(request, "sin_datos.html")
