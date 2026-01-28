@@ -303,7 +303,7 @@
                     
                     {% if productos_academicos %}
                     <div class="col-12 mt-4">
-                        <h5 class="fw-bold text-dark mb-3">Producción Académica</h5>
+                        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-book-half me-2"></i>Producción Académica</h5>
                         <div class="card border-0 shadow-sm rounded-4">
                             <ul class="list-group list-group-flush">
                                 {% for p in productos_academicos %}
@@ -312,7 +312,26 @@
                                         <div class="fw-bold">{{ p.nombrerecurso }}</div>
                                         <span class="badge bg-secondary">{{ p.clasificador }}</span>
                                     </div>
-                                    <small class="text-muted">{{ p.descripcion }}</small>
+                                    <small class="text-muted">{{ p.descripcion|default:"" }}</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if productos_laborales %}
+                    <div class="col-12 mt-4">
+                        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-briefcase-fill me-2"></i>Producción Laboral</h5>
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <ul class="list-group list-group-flush">
+                                {% for p in productos_laborales %}
+                                <li class="list-group-item p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="fw-bold">{{ p.nombreproducto }}</div>
+                                        <span class="badge bg-secondary">{{ p.fechaproducto|date:"Y" }}</span>
+                                    </div>
+                                    <small class="text-muted">{{ p.descripcion|default:"" }}</small>
                                 </li>
                                 {% endfor %}
                             </ul>
@@ -341,7 +360,7 @@
                             </div>
                             
                             {% if e.descripcionfunciones %}
-                                <p class="text-secondary small mb-3">{{ e.descripcionfunciones }}</p>
+                                <p class="text-secondary small mb-3">{{ e.descripcionfunciones|default:"" }}</p>
                             {% endif %}
                             
                             {% if e.final_url %}
@@ -422,7 +441,7 @@
                             <div class="p-3 d-flex flex-column flex-grow-1">
                                 <h6 class="fw-bold text-dark mb-1">{{ r.tiporeconocimiento }}</h6>
                                 <div class="small text-primary fw-bold mb-2">{{ r.entidadpatrocinadora }}</div>
-                                <div class="small text-secondary mb-3">{{ r.descripcionreconocimiento }}</div>
+                                <div class="small text-secondary mb-3">{{ r.descripcionreconocimiento|default:"" }}</div>
                                 
                                 <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
                                     <span class="text-muted small">{{ r.fechareconocimiento|date:"Y" }}</span>
@@ -462,7 +481,7 @@
                                     <h5 class="fw-bold">{{ v.nombreproducto }}</h5>
                                     <span class="text-success fw-bold">${{ v.precio }}</span>
                                 </div>
-                                <p class="small text-muted mb-3">{{ v.descripcion|truncatewords:15 }}</p>
+                                <p class="small text-muted mb-3">{{ v.descripcion|default:"" }}</p>
                                 <div class="mt-auto">
                                     {% if v.archivo_digital %}
                                         <a href="{{ v.archivo_digital.url }}" target="_blank" class="btn btn-dark btn-sm w-100">Ver Detalles/Foto</a>
@@ -493,10 +512,8 @@
                     <div class="d-flex flex-column gap-2">
                         <div class="form-check p-2 border rounded bg-light"><input class="form-check-input ms-1" type="checkbox" name="exp" id="c1" checked><label class="form-check-label fw-bold ms-2 w-100" for="c1">Experiencia</label></div>
                         <div class="form-check p-2 border rounded bg-light"><input class="form-check-input ms-1" type="checkbox" name="edu" id="c2" checked><label class="form-check-label fw-bold ms-2 w-100" for="c2">Formación</label></div>
-                        
                         <div class="form-check p-2 border rounded bg-light"><input class="form-check-input ms-1" type="checkbox" name="acad" id="c3" checked><label class="form-check-label fw-bold ms-2 w-100" for="c3">Productos Académicos</label></div>
                         <div class="form-check p-2 border rounded bg-light"><input class="form-check-input ms-1" type="checkbox" name="lab" id="c4" checked><label class="form-check-label fw-bold ms-2 w-100" for="c4">Productos Laborales</label></div>
-                        
                         <div class="form-check p-2 border rounded bg-light"><input class="form-check-input ms-1" type="checkbox" name="rec" id="c5" checked><label class="form-check-label fw-bold ms-2 w-100" for="c5">Logros</label></div>
                         <div class="form-check p-2 border rounded bg-light"><input class="form-check-input ms-1" type="checkbox" name="garage" id="c6"><label class="form-check-label fw-bold ms-2 w-100" for="c6">Garage</label></div>
                     </div>
