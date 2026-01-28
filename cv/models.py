@@ -1,21 +1,37 @@
+# cv/models.py  ✅ COMPLETO y CORREGIDO (sin closures en upload_to)
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import date
-
-
-
 import os
 import uuid
 
-def short_upload(prefix: str):
-    def _path(instance, filename):
-        ext = os.path.splitext(filename)[1].lower()  # .pdf, .jpg, etc
-        return f"{prefix}/{uuid.uuid4().hex}{ext}"
-    return _path
 
-# =========================
+# ============================================================
+# Upload helpers (IMPORTANTE: funciones a nivel de módulo)
+# ============================================================
+
+def _upload_uuid(prefix: str, filename: str) -> str:
+    ext = os.path.splitext(filename)[1].lower()  # .pdf, .jpg, etc
+    return f"{prefix}/{uuid.uuid4().hex}{ext}"
+
+def upload_experiencia(instance, filename):
+    return _upload_uuid("certificados/experiencia", filename)
+
+def upload_cursos(instance, filename):
+    return _upload_uuid("certificados/cursos", filename)
+
+def upload_logros(instance, filename):
+    return _upload_uuid("certificados/logros", filename)
+
+def upload_garage(instance, filename):
+    return _upload_uuid("garage", filename)
+
+
+# ============================================================
 # VALIDADORES (Lógica de Negocio)
-# =========================
+# ============================================================
+
 def validar_no_futuro(fecha):
     """Lanza error si la fecha es mayor a hoy."""
     if fecha and fecha > date.today():
@@ -25,6 +41,7 @@ def validar_rango_fechas(inicio, fin):
     """Lanza error si el fin es antes del inicio."""
     if inicio and fin and fin < inicio:
         raise ValidationError("La fecha de finalización no puede ser anterior a la de inicio.")
+
 
 class CleanSaveMixin(models.Model):
     """
@@ -38,11 +55,10 @@ class CleanSaveMixin(models.Model):
         self.full_clean()  # Dispara validaciones
         return super().save(*args, **kwargs)
 
-# =========================
-# MODELOS (CORREGIDOS PARA BD NUEVA)
-# - PKs autoincrementales (BigAutoField)
-# - managed=True para que Django cree/actualice tablas con migraciones
-# =========================
+
+# ============================================================
+# MODELOS
+# ============================================================
 
 class Datospersonales(CleanSaveMixin, models.Model):
     idperfil = models.BigAutoField(primary_key=True)
@@ -103,18 +119,17 @@ class Experiencialaboral(CleanSaveMixin, models.Model):
     # Link externo (opcional)
     rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
 
-    # Archivo (PDF/IMG)
+    # Archivo (PDF/IMG) ✅ CORREGIDO
     archivo_digital = models.FileField(
-        upload_to=short_upload("certificados/experiencia"),
+        upload_to=upload_experiencia,
         blank=True,
         null=True,
         verbose_name="Subir PDF/Imagen",
     )
 
-
     idperfilconqueestaactivo = models.ForeignKey(
         Datospersonales,
-        on_delete=models.CASCADE,  # recomendado para BD nueva
+        on_delete=models.CASCADE,
         db_column="idperfilconqueestaactivo",
         blank=True,
         null=True,
@@ -152,13 +167,13 @@ class Cursosrealizados(CleanSaveMixin, models.Model):
 
     rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
 
+    # Archivo (PDF/IMG) ✅ CORREGIDO
     archivo_digital = models.FileField(
-        upload_to=short_upload("certificados/cursos"),
+        upload_to=upload_cursos,
         blank=True,
         null=True,
         verbose_name="Subir PDF/Imagen",
     )
-
 
     idperfilconqueestaactivo = models.ForeignKey(
         Datospersonales,
@@ -197,13 +212,13 @@ class Reconocimientos(CleanSaveMixin, models.Model):
 
     rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
 
+    # Archivo (PDF/IMG) ✅ CORREGIDO
     archivo_digital = models.FileField(
-        upload_to=short_upload("certificados/logros"),
+        upload_to=upload_logros,
         blank=True,
         null=True,
         verbose_name="Subir PDF/Imagen",
     )
-
 
     idperfilconqueestaactivo = models.ForeignKey(
         Datospersonales,
@@ -289,13 +304,13 @@ class Ventagarage(CleanSaveMixin, models.Model):
     imagen = models.CharField(max_length=100, blank=True, null=True)
     activo = models.BooleanField(default=True)
 
+    # Archivo (foto/pdf) ✅ CORREGIDO
     archivo_digital = models.FileField(
-        upload_to=short_upload("garage"),
+        upload_to=upload_garage,
         blank=True,
         null=True,
         verbose_name="Foto Real del Producto",
     )
-
 
     idperfilconqueestaactivo = models.ForeignKey(
         Datospersonales,

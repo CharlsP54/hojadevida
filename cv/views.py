@@ -22,6 +22,118 @@ from .models import (
     Ventagarage,
 )
 
+from django.http import Http404
+from django.shortcuts import redirect, get_object_or_404
+from django.urls import reverse
+
+# ------------------------------------------------------------
+# Resolver universal para abrir documentos (PDF/IMG) "solo el archivo"
+# ------------------------------------------------------------
+
+DOC_MODELS = {
+    # acepta varios alias por si en la URL pones nombres cortos
+    "exp": Experiencialaboral,
+    "experiencia": Experiencialaboral,
+    "experiencialaboral": Experiencialaboral,
+
+    "cursos": Cursosrealizados,
+    "curso": Cursosrealizados,
+    "cursosrealizados": Cursosrealizados,
+
+    "rec": Reconocimientos,
+    "reconocimiento": Reconocimientos,
+    "reconocimientos": Reconocimientos,
+
+    "garage": Ventagarage,
+    "ventagarage": Ventagarage,
+    "venta": Ventagarage,
+}
+
+def doc_redirect(request, model: str, pk: int):
+    """
+    Abre SOLO el archivo (PDF/imagen) en una pestaña.
+    Si no hay archivo, intenta redirigir a rutacertificado.
+    """
+    model = (model or "").lower().strip()
+    ModelClass = DOC_MODELS.get(model)
+    if not ModelClass:
+        raise Http404("Modelo no soportado")
+
+    obj = get_object_or_404(ModelClass, pk=pk)
+
+    # 1) archivo subido
+    f = getattr(obj, "archivo_digital", None)
+    if f and getattr(f, "url", None):
+        return redirect(f.url)
+
+    # 2) link externo
+    link = getattr(obj, "rutacertificado", None)
+    if link:
+        return redirect(link)
+
+    raise Http404("No hay documento para mostrar")
+
+
+# ------------------------------------------------------------
+# Helpers para miniatura + ver documento (para perfil_detail.html)
+# ------------------------------------------------------------
+
+def _is_pdf_url(url: str) -> bool:
+    return bool(url) and url.lower().split("?")[0].endswith(".pdf")
+
+def _is_cloudinary(url: str) -> bool:
+    return bool(url) and ("res.cloudinary.com" in url and "/upload/" in url)
+
+def _inject_cloudinary_transform(url: str, transform: str) -> str:
+    marker = "/upload/"
+    if marker not in url:
+        return url
+    left, right = url.split(marker, 1)
+    return f"{left}{marker}{transform}/{right}"
+
+def _as_cloudinary_image_url(url: str) -> str:
+    # Cuando el PDF se guarda como raw, Cloudinary puede renderizarlo como imagen
+    return url.replace("/raw/upload/", "/image/upload/")
+
+def _cloudinary_pdf_thumb(pdf_url: str, width: int = 900) -> str:
+    # Miniatura: primera página del PDF como JPG
+    base = _as_cloudinary_image_url(pdf_url)
+    transform = f"f_jpg,q_auto,w_{width},c_scale,pg_1"
+    return _inject_cloudinary_transform(base, transform)
+
+def _enrich_items_for_front(items, *, model_slug: str, file_attr: str = "archivo_digital"):
+    """
+    Agrega:
+      - file_is_pdf
+      - file_thumb_url  (miniatura)
+      - file_view_url   (link que abre SOLO el archivo)
+    """
+    for obj in items:
+        f = getattr(obj, file_attr, None)
+        file_url = getattr(f, "url", "") if f else ""
+
+        obj.file_is_pdf = _is_pdf_url(file_url)
+
+        # Link "Ver PDF"
+        obj.file_view_url = reverse("cv_doc", args=[model_slug, obj.pk]) if (file_url or getattr(obj, "rutacertificado", None)) else ""
+
+        # Miniatura
+        if not file_url:
+            obj.file_thumb_url = ""  # template mostrará icono por defecto
+        else:
+            if obj.file_is_pdf and _is_cloudinary(file_url):
+                obj.file_thumb_url = _cloudinary_pdf_thumb(file_url)
+            elif obj.file_is_pdf:
+                # Si NO es Cloudinary, no podemos sacar miniatura real sin librerías extra.
+                # Usa un placeholder estático (crea este archivo en /static/img/pdf.png)
+                obj.file_thumb_url = "/static/img/pdf.png"
+            else:
+                # imágenes subidas (jpg/png/webp)
+                obj.file_thumb_url = file_url
+
+    return items
+
+
 # ============================================================
 # Cloudinary helpers (soporta URLs protegidas con firma)
 # ============================================================
@@ -285,10 +397,11 @@ def perfil_detail(request, idperfil):
     ).order_by("-fechapublicacion")
 
     # ✅ Miniaturas + Ver PDF + doc_pages (firmado)
-    _enrich_items(experiencias)
-    _enrich_items(cursos)
-    _enrich_items(reconocimientos)
-    _enrich_items(ventas_garage)
+    _enrich_items_for_front(experiencias, model_slug="exp")
+    _enrich_items_for_front(cursos, model_slug="cursos")
+    _enrich_items_for_front(reconocimientos, model_slug="rec")
+    _enrich_items_for_front(ventas_garage, model_slug="garage")
+
 
     context = {
         "perfil": perfil,
