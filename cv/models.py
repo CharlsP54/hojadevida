@@ -1,4 +1,3 @@
-# cv/models.py
 from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import date
@@ -6,7 +5,7 @@ import os
 import uuid
 
 # ============================================================
-# Upload helpers (Funciones para renombrar archivos)
+# Upload helpers
 # ============================================================
 
 def _upload_uuid(prefix: str, filename: str) -> str:
@@ -21,47 +20,33 @@ def upload_garage(instance, filename): return _upload_uuid("garage", filename)
 
 
 # ============================================================
-# VALIDADORES (Lógica de Negocio y Reglas)
+# VALIDADORES (Reglas de Negocio)
 # ============================================================
 
 def validar_no_futuro(fecha):
-    """Impide seleccionar fechas futuras."""
     if fecha and fecha > date.today():
         raise ValidationError("No se permiten fechas futuras.")
 
 def validar_rango_fechas(inicio, fin):
-    """Impide que la fecha de fin sea anterior a la de inicio."""
     if inicio and fin and fin < inicio:
         raise ValidationError("La fecha final debe ser posterior a la inicial.")
 
 def validar_edad_18_100(fecha):
-    """
-    Valida que la persona tenga entre 18 y 100 años.
-    """
-    if not fecha:
-        return
-    
+    if not fecha: return
     hoy = date.today()
-    # Calculo preciso de edad (considera si ya pasó el cumpleaños este año)
     edad = hoy.year - fecha.year - ((hoy.month, hoy.day) < (fecha.month, fecha.day))
-
-    if edad < 18:
-        raise ValidationError(f"Debes ser mayor de edad (Tienes {edad} años).")
-    if edad > 100:
-        raise ValidationError(f"La fecha parece incorrecta, la edad ({edad} años) excede el límite permitido.")
+    if edad < 18: raise ValidationError(f"Debes ser mayor de edad (Tienes {edad} años).")
+    if edad > 100: raise ValidationError(f"Edad no válida ({edad} años).")
 
 def validar_10_digitos(valor):
-    """
-    Valida que el campo tenga exactamente 10 números (para cédula y celular).
-    """
-    if not valor:
-        return
-    
-    if not valor.isdigit():
-        raise ValidationError("Este campo solo debe contener números.")
-    
-    if len(valor) != 10:
-        raise ValidationError(f"Debe tener exactamente 10 dígitos (actualmente tiene {len(valor)}).")
+    if not valor: return
+    if not valor.isdigit(): raise ValidationError("Solo se permiten números.")
+    if len(valor) != 10: raise ValidationError(f"Debe tener exactamente 10 dígitos (tiene {len(valor)}).")
+
+# ✅ NUEVO VALIDADOR: Solo números positivos (> 0)
+def validar_positivo(valor):
+    if valor is not None and valor <= 0:
+        raise ValidationError("El valor debe ser mayor a 0 (no se permiten negativos ni cero).")
 
 
 class CleanSaveMixin(models.Model):
@@ -78,58 +63,29 @@ class CleanSaveMixin(models.Model):
 class Datospersonales(CleanSaveMixin, models.Model):
     idperfil = models.BigAutoField(primary_key=True)
     
-    # Datos básicos
     nombres = models.CharField(max_length=60, blank=True, null=True)
     apellidos = models.CharField(max_length=60, blank=True, null=True)
     descripcionperfil = models.CharField(max_length=50, blank=True, null=True)
-    
-    # URL de Foto (Mantenemos tu configuración actual)
-    foto_perfil_url = models.URLField(blank=True, null=True, verbose_name="Link Foto Perfil")
+    foto_perfil_url = models.URLField(blank=True, null=True, verbose_name="Link Foto Perfil (Cloudinary)")
 
-    # Otros datos
     perfilactivo = models.IntegerField(blank=True, null=True)
     nacionalidad = models.CharField(max_length=20, blank=True, null=True)
     lugarnacimiento = models.CharField(max_length=60, blank=True, null=True)
     
-    # ✅ VALIDACIÓN DE EDAD APLICADA
-    fechanacimiento = models.DateField(
-        blank=True, 
-        null=True, 
-        validators=[validar_edad_18_100],
-        verbose_name="Fecha de Nacimiento"
-    )
-    
-    # ✅ VALIDACIÓN DE 10 DÍGITOS APLICADA
-    numerocedula = models.CharField(
-        max_length=10, 
-        blank=True, 
-        null=True, 
-        validators=[validar_10_digitos],
-        verbose_name="Cédula"
-    )
+    fechanacimiento = models.DateField(blank=True, null=True, validators=[validar_edad_18_100], verbose_name="Fecha Nacimiento")
+    numerocedula = models.CharField(max_length=10, blank=True, null=True, validators=[validar_10_digitos], verbose_name="Cédula")
     
     sexo = models.CharField(max_length=1, blank=True, null=True)
     estadocivil = models.CharField(max_length=50, blank=True, null=True)
     licenciaconducir = models.CharField(max_length=6, blank=True, null=True)
     
-    # Contacto
-    # ✅ VALIDACIÓN DE 10 DÍGITOS APLICADA (Celular)
-    telefonoconvencional = models.CharField(
-        max_length=15, 
-        blank=True, 
-        null=True, 
-        validators=[validar_10_digitos],
-        verbose_name="Celular"
-    )
-    
+    telefonoconvencional = models.CharField(max_length=15, blank=True, null=True, validators=[validar_10_digitos], verbose_name="Celular")
     telefonofijo = models.CharField(max_length=15, blank=True, null=True)
     direcciontrabajo = models.CharField(max_length=50, blank=True, null=True)
     direcciondomiciliaria = models.CharField(max_length=50, blank=True, null=True)
     sitioweb = models.CharField(max_length=60, blank=True, null=True)
     
-    # Configuración
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
-    
     mostrar_experiencia = models.BooleanField(default=True)
     mostrar_cursos = models.BooleanField(default=True)
     mostrar_reconocimientos = models.BooleanField(default=True)
@@ -138,10 +94,7 @@ class Datospersonales(CleanSaveMixin, models.Model):
     mostrar_ventagarage = models.BooleanField(default=True)
 
     def clean(self):
-        # Mantenemos validaciones extra por si acaso
-        if self.fechanacimiento: 
-            validar_no_futuro(self.fechanacimiento)
-            validar_edad_18_100(self.fechanacimiento)
+        if self.fechanacimiento: validar_no_futuro(self.fechanacimiento)
 
     class Meta:
         db_table = "datospersonales"
@@ -181,7 +134,15 @@ class Cursosrealizados(CleanSaveMixin, models.Model):
     nombrecurso = models.CharField(max_length=100, blank=True, null=True)
     fechainicio = models.DateField(blank=True, null=True)
     fechafin = models.DateField(blank=True, null=True)
-    totalhoras = models.IntegerField(blank=True, null=True)
+    
+    # ✅ VALIDACIÓN APLICADA: Total Horas > 0
+    totalhoras = models.IntegerField(
+        blank=True, 
+        null=True, 
+        validators=[validar_positivo], 
+        verbose_name="Total Horas"
+    )
+    
     descripcioncurso = models.CharField(max_length=100, blank=True, null=True)
     entidadpatrocinadora = models.CharField(max_length=100, blank=True, null=True)
     nombrecontactoauspicia = models.CharField(max_length=100, blank=True, null=True)
@@ -257,7 +218,15 @@ class Ventagarage(CleanSaveMixin, models.Model):
     idventagaraje = models.BigAutoField(primary_key=True)
     nombreproducto = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # ✅ VALIDACIÓN APLICADA: Precio > 0
+    precio = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        validators=[validar_positivo], 
+        verbose_name="Precio"
+    )
+    
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES)
     fechapublicacion = models.DateField()
     imagen = models.CharField(max_length=100, blank=True, null=True)

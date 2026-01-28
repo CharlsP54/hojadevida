@@ -17,97 +17,57 @@ from .models import (
     Ventagarage,
 )
 
-# ============================================================
-# HELPER: Generador de Miniaturas Cloudinary
-# ============================================================
 def _get_cloudinary_thumbnail(file_url):
-    """
-    Transforma la URL de un PDF en Cloudinary para obtener 
-    una imagen JPG de la primera página.
-    """
-    if not file_url:
-        return None
-    
-    # Si no es Cloudinary, devolvemos la URL original (para imagenes locales)
-    if "cloudinary" not in file_url:
-        return file_url
-
+    if not file_url or "cloudinary" not in file_url: return file_url
     try:
         if "/upload/" in file_url:
             base_part, id_part = file_url.split("/upload/")
-            # Inyectamos transformaciones: 
-            # w_600 (ancho), f_jpg (formato imagen), pg_1 (pagina 1)
             new_url = f"{base_part}/upload/w_600,q_auto,f_jpg,pg_1/{id_part}"
-            
-            # Aseguramos que termine en .jpg si era .pdf
             if new_url.lower().endswith(".pdf"):
                 new_url = new_url[:-4] + ".jpg"
             return new_url
     except Exception:
         return file_url
-    
     return file_url
 
 def _enrich_objects(objects):
-    """
-    Recorre una lista de objetos y les agrega atributos temporales
-    para el frontend: .thumbnail, .is_pdf
-    """
     for obj in objects:
+        url_final = None
         if obj.archivo_digital:
-            url = obj.archivo_digital.url
-            obj.is_pdf = url.lower().endswith('.pdf')
-            # Generar miniatura inteligente
-            obj.thumbnail = _get_cloudinary_thumbnail(url)
+            url_final = obj.archivo_digital.url
+        elif getattr(obj, 'rutacertificado', None):
+            url_final = obj.rutacertificado
+
+        if url_final:
+            obj.final_url = url_final
+            obj.is_pdf = url_final.lower().endswith('.pdf')
+            obj.thumbnail = _get_cloudinary_thumbnail(url_final)
         else:
+            obj.final_url = None
             obj.is_pdf = False
             obj.thumbnail = None
     return objects
 
-# ============================================================
-# VISTAS
-# ============================================================
-
 def doc_redirect(request, model, pk):
-    """ Redirecciona al archivo original (útil para links cortos) """
-    MODELS = {
-        "exp": Experiencialaboral,
-        "cursos": Cursosrealizados,
-        "rec": Reconocimientos,
-        "garage": Ventagarage,
-    }
+    MODELS = { "exp": Experiencialaboral, "cursos": Cursosrealizados, "rec": Reconocimientos, "garage": Ventagarage }
     ModelClass = MODELS.get(model)
-    if not ModelClass:
-        raise Http404("Modelo no encontrado")
-    
+    if not ModelClass: raise Http404("Modelo no encontrado")
     obj = get_object_or_404(ModelClass, pk=pk)
-    if obj.archivo_digital:
-        return redirect(obj.archivo_digital.url)
-    if getattr(obj, 'rutacertificado', None):
-        return redirect(obj.rutacertificado)
+    
+    if obj.archivo_digital: return redirect(obj.archivo_digital.url)
+    if getattr(obj, 'rutacertificado', None): return redirect(obj.rutacertificado)
     return redirect('home')
 
 def cv_home(request):
     perfil = Datospersonales.objects.filter(activarparaqueseveaenfront=True).first()
-    if perfil:
-        return redirect("cv_detail", idperfil=perfil.idperfil)
-    # Si no hay perfil, mostramos la vista de sin datos
+    if perfil: return redirect("cv_detail", idperfil=perfil.idperfil)
     return sin_datos(request)
 
 def sin_datos(request):
-    """ Función para evitar errores cuando no hay perfiles """
-    return HttpResponse(
-        "<div style='text-align:center; padding:50px; font-family:sans-serif;'>"
-        "<h1>No hay perfiles activos</h1>"
-        "<p>Vaya al panel de administrador (/admin) y cree un perfil marcando la casilla 'Activar para Front'.</p>"
-        "<a href='/admin'>Ir al Admin</a>"
-        "</div>"
-    )
+    return HttpResponse("<div style='text-align:center; padding:50px;'><h1>No hay perfiles activos</h1><a href='/admin'>Ir al Admin</a></div>")
 
 def perfil_detail(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
-
-    # Consultas
     experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainiciogestion")
     cursos = Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainicio")
     productos_academicos = Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-idproductoacademico")
@@ -115,32 +75,22 @@ def perfil_detail(request, idperfil):
     reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechareconocimiento")
     ventas_garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil, activo=True).order_by("-fechapublicacion")
 
-    # Enriquecer con miniaturas para el HTML
     _enrich_objects(experiencias)
     _enrich_objects(cursos)
     _enrich_objects(reconocimientos)
     _enrich_objects(ventas_garage)
 
     context = {
-        "perfil": perfil,
-        "experiencias": experiencias,
-        "cursos": cursos,
-        "productos_academicos": productos_academicos,
-        "productos_laborales": productos_laborales,
-        "reconocimientos": reconocimientos,
-        "ventas_garage": ventas_garage,
+        "perfil": perfil, "experiencias": experiencias, "cursos": cursos,
+        "productos_academicos": productos_academicos, "productos_laborales": productos_laborales,
+        "reconocimientos": reconocimientos, "ventas_garage": ventas_garage,
     }
     return render(request, "perfil_detail.html", context)
 
-
 def cv_print(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
-
-    # 1. Lógica de Filtros
     from_modal = request.GET.get("from_modal") == "true"
-    
-    def check(key):
-        return request.GET.get(key) is not None if from_modal else True
+    def check(key): return request.GET.get(key) is not None if from_modal else True
 
     show_exp = check("exp")
     show_edu = check("edu")
@@ -149,58 +99,55 @@ def cv_print(request, idperfil):
     show_rec = check("rec")
     show_garage = check("garage") if from_modal else False 
 
-    # 2. Filtrar Querysets
     experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainiciogestion") if show_exp else []
     cursos = Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainicio") if show_edu else []
     prod_acad = Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_acad else []
     prod_lab = Productoslaborales.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_lab else []
     reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_rec else []
     garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil, activo=True) if show_garage else []
+    
+    _enrich_objects(experiencias)
+    _enrich_objects(cursos)
+    _enrich_objects(reconocimientos)
 
-    # 3. Generar PDF Principal (Usando estilos incrustados en HTML)
     context = {
-        "perfil": perfil,
-        "experiencias": experiencias,
-        "cursos": cursos,
-        "productos_academicos": prod_acad,
-        "productos_laborales": prod_lab,
-        "reconocimientos": reconocimientos,
-        "ventas_garage": garage,
+        "perfil": perfil, "experiencias": experiencias, "cursos": cursos,
+        "productos_academicos": prod_acad, "productos_laborales": prod_lab,
+        "reconocimientos": reconocimientos, "ventas_garage": garage,
     }
     
     html_string = render_to_string('cv_print.html', context)
-    
-    # Renderizamos PDF sin fetcher externo, confiando en el CSS incrustado
     html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
-    
     main_buffer = io.BytesIO()
     html.write_pdf(main_buffer)
     main_buffer.seek(0)
 
-    # 4. Fusión de Anexos
     merger = PdfWriter()
     merger.append(main_buffer)
 
     def append_attachments(queryset):
         for item in queryset:
+            url_to_download = None
             if item.archivo_digital:
-                url = item.archivo_digital.url
-                if url.lower().endswith(".pdf"):
-                    try:
-                        # Timeout para evitar que se cuelgue si Cloudinary tarda
-                        response = requests.get(url, timeout=10)
-                        if response.status_code == 200:
-                            remote_pdf = io.BytesIO(response.content)
-                            merger.append(remote_pdf)
-                    except Exception as e:
-                        print(f"Error uniendo PDF {url}: {e}")
+                url_to_download = item.archivo_digital.url
+            elif getattr(item, 'rutacertificado', None):
+                link = item.rutacertificado
+                if link and link.lower().strip().endswith('.pdf'):
+                    url_to_download = link
+
+            if url_to_download:
+                try:
+                    response = requests.get(url_to_download, timeout=15)
+                    if response.status_code == 200:
+                        merger.append(io.BytesIO(response.content))
+                except Exception as e:
+                    print(f"Error uniendo PDF {url_to_download}: {e}")
 
     if show_edu: append_attachments(cursos)
     if show_exp: append_attachments(experiencias)
     if show_rec: append_attachments(reconocimientos)
     if show_garage: append_attachments(garage)
 
-    # 5. Salida Final
     output_buffer = io.BytesIO()
     merger.write(output_buffer)
     merger.close()
@@ -209,5 +156,4 @@ def cv_print(request, idperfil):
     response = HttpResponse(output_buffer, content_type='application/pdf')
     filename = f"CV_{perfil.nombres}_{perfil.apellidos}.pdf"
     response['Content-Disposition'] = f'inline; filename="{filename}"'
-    
     return response
