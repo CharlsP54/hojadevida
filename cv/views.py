@@ -1,16 +1,12 @@
 # cv/views.py
-from __future__ import annotations
-
-import re
-from urllib.parse import urlparse
-from io import BytesIO
-
+import io
 import requests
-from pypdf import PdfReader
-
-from django.shortcuts import get_object_or_404, render, redirect
-
-from cloudinary.utils import cloudinary_url  # <-- IMPORTANTE
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse, Http404
+from django.template.loader import render_to_string
+from django.urls import reverse
+from weasyprint import HTML
+from pypdf import PdfWriter
 
 from .models import (
     Datospersonales,
@@ -22,386 +18,103 @@ from .models import (
     Ventagarage,
 )
 
-from django.http import Http404
-from django.shortcuts import redirect, get_object_or_404
-from django.urls import reverse
-
-# ------------------------------------------------------------
-# Resolver universal para abrir documentos (PDF/IMG) "solo el archivo"
-# ------------------------------------------------------------
-
-DOC_MODELS = {
-    # acepta varios alias por si en la URL pones nombres cortos
-    "exp": Experiencialaboral,
-    "experiencia": Experiencialaboral,
-    "experiencialaboral": Experiencialaboral,
-
-    "cursos": Cursosrealizados,
-    "curso": Cursosrealizados,
-    "cursosrealizados": Cursosrealizados,
-
-    "rec": Reconocimientos,
-    "reconocimiento": Reconocimientos,
-    "reconocimientos": Reconocimientos,
-
-    "garage": Ventagarage,
-    "ventagarage": Ventagarage,
-    "venta": Ventagarage,
-}
-
-def doc_redirect(request, model: str, pk: int):
-    """
-    Abre SOLO el archivo (PDF/imagen) en una pestaña.
-    Si no hay archivo, intenta redirigir a rutacertificado.
-    """
-    model = (model or "").lower().strip()
-    ModelClass = DOC_MODELS.get(model)
-    if not ModelClass:
-        raise Http404("Modelo no soportado")
-
-    obj = get_object_or_404(ModelClass, pk=pk)
-
-    # 1) archivo subido
-    f = getattr(obj, "archivo_digital", None)
-    if f and getattr(f, "url", None):
-        return redirect(f.url)
-
-    # 2) link externo
-    link = getattr(obj, "rutacertificado", None)
-    if link:
-        return redirect(link)
-
-    raise Http404("No hay documento para mostrar")
-
-
-# ------------------------------------------------------------
-# Helpers para miniatura + ver documento (para perfil_detail.html)
-# ------------------------------------------------------------
-
-def _is_pdf_url(url: str) -> bool:
-    return bool(url) and url.lower().split("?")[0].endswith(".pdf")
-
-def _is_cloudinary(url: str) -> bool:
-    return bool(url) and ("res.cloudinary.com" in url and "/upload/" in url)
-
-def _inject_cloudinary_transform(url: str, transform: str) -> str:
-    marker = "/upload/"
-    if marker not in url:
-        return url
-    left, right = url.split(marker, 1)
-    return f"{left}{marker}{transform}/{right}"
-
-def _as_cloudinary_image_url(url: str) -> str:
-    # Cuando el PDF se guarda como raw, Cloudinary puede renderizarlo como imagen
-    return url.replace("/raw/upload/", "/image/upload/")
-
-def _cloudinary_pdf_thumb(pdf_url: str, width: int = 900) -> str:
-    # Miniatura: primera página del PDF como JPG
-    base = _as_cloudinary_image_url(pdf_url)
-    transform = f"f_jpg,q_auto,w_{width},c_scale,pg_1"
-    return _inject_cloudinary_transform(base, transform)
-
-def _enrich_items_for_front(items, *, model_slug: str, file_attr: str = "archivo_digital"):
-    """
-    Agrega:
-      - file_is_pdf
-      - file_thumb_url  (miniatura)
-      - file_view_url   (link que abre SOLO el archivo)
-    """
-    for obj in items:
-        f = getattr(obj, file_attr, None)
-        file_url = getattr(f, "url", "") if f else ""
-
-        obj.file_is_pdf = _is_pdf_url(file_url)
-
-        # Link "Ver PDF"
-        obj.file_view_url = reverse("cv_doc", args=[model_slug, obj.pk]) if (file_url or getattr(obj, "rutacertificado", None)) else ""
-
-        # Miniatura
-        if not file_url:
-            obj.file_thumb_url = ""  # template mostrará icono por defecto
-        else:
-            if obj.file_is_pdf and _is_cloudinary(file_url):
-                obj.file_thumb_url = _cloudinary_pdf_thumb(file_url)
-            elif obj.file_is_pdf:
-                # Si NO es Cloudinary, no podemos sacar miniatura real sin librerías extra.
-                # Usa un placeholder estático (crea este archivo en /static/img/pdf.png)
-                obj.file_thumb_url = "/static/img/pdf.png"
-            else:
-                # imágenes subidas (jpg/png/webp)
-                obj.file_thumb_url = file_url
-
-    return items
-
-
 # ============================================================
-# Cloudinary helpers (soporta URLs protegidas con firma)
+# HELPER: Generador de Miniaturas Cloudinary
 # ============================================================
-
-_CLOUDINARY_HOST = "res.cloudinary.com"
-_RE_VERSION = re.compile(r"^v\d+$")
-
-def _parse_cloudinary(file_url: str):
+def _get_cloudinary_thumbnail(file_url):
     """
-    Parsea URLs tipo:
-    https://res.cloudinary.com/<cloud>/<resource_type>/<delivery_type>/upload/.../v123/<public_id>.<ext>
-
-    Devuelve:
-      (resource_type, delivery_type, public_id, ext|None)
+    Transforma la URL de un PDF en Cloudinary para obtener 
+    una imagen JPG de la primera página.
     """
     if not file_url:
         return None
+    
+    # Si no es Cloudinary, devolvemos la URL original (para imagenes locales)
+    if "cloudinary" not in file_url:
+        return file_url
 
-    u = urlparse(file_url)
-    if _CLOUDINARY_HOST not in (u.netloc or ""):
-        return None
-
-    path = (u.path or "").lstrip("/")
-    parts = path.split("/")
-    if len(parts) < 5:
-        return None
-
-    # parts[0] = cloud_name
-    resource_type = parts[1]  # image/raw/video
-    delivery_type = parts[2]  # upload / authenticated / private / etc
-
-    # ubicamos "upload"
+    # Truco de Cloudinary: Cambiar extensión a .jpg y pedir página 1
+    # Ejemplo entrada: .../upload/v1234/archivo.pdf
+    # Ejemplo salida:  .../upload/w_600,f_jpg,pg_1/v1234/archivo.jpg
+    
     try:
-        upos = parts.index("upload")
-    except ValueError:
-        return None
-
-    after = parts[upos + 1 :]
-
-    # Saltar transformaciones hasta encontrar v123
-    vpos = None
-    for i, seg in enumerate(after):
-        if _RE_VERSION.match(seg):
-            vpos = i
-            break
-
-    public_parts = after[vpos + 1 :] if vpos is not None else after
-    public_path = "/".join(public_parts)
-
-    # extraer extensión si existe
-    last = public_path.split("/")[-1]
-    if "." in last:
-        base, ext = public_path.rsplit(".", 1)
-        public_id = base
-        fmt = ext
-    else:
-        public_id = public_path
-        fmt = None
-
-    return (resource_type, delivery_type, public_id, fmt)
-
-def _signed_cloudinary(public_id: str, *, resource_type: str, delivery_type: str, fmt: str | None, transformation=None) -> str:
-    url, _ = cloudinary_url(
-        public_id,
-        resource_type=resource_type,
-        type=delivery_type,
-        format=fmt,
-        secure=True,
-        sign_url=True,
-        transformation=transformation,
-    )
-    return url
-
-def _is_pdf_field(file_field) -> bool:
-    if not file_field:
-        return False
-    name = (getattr(file_field, "name", "") or "").lower()
-    url = (getattr(file_field, "url", "") or "").lower()
-    return name.endswith(".pdf") or url.endswith(".pdf") or ".pdf" in name or ".pdf" in url
-
-def _count_pdf_pages_from_url(file_url: str, timeout: int = 15) -> int:
-    """
-    Ojo: si Cloudinary exige firma, aquí debemos contar usando URL firmada.
-    """
-    try:
-        r = requests.get(file_url, timeout=timeout)
-        r.raise_for_status()
-        reader = PdfReader(BytesIO(r.content))
-        return max(1, len(reader.pages) or 1)
+        if "/upload/" in file_url:
+            base_part, id_part = file_url.split("/upload/")
+            # Inyectamos transformaciones: 
+            # w_600 (ancho), f_jpg (formato imagen), pg_1 (pagina 1)
+            new_url = f"{base_part}/upload/w_600,q_auto,f_jpg,pg_1/{id_part}"
+            
+            # Aseguramos que termine en .jpg si era .pdf
+            if new_url.lower().endswith(".pdf"):
+                new_url = new_url[:-4] + ".jpg"
+            return new_url
     except Exception:
-        return 1
+        return file_url
+    
+    return file_url
 
-def _build_urls_for_file(file_field):
+def _enrich_objects(objects):
     """
-    Devuelve:
-      (is_pdf, view_url, thumb_url)
+    Recorre una lista de objetos y les agrega atributos temporales
+    para el frontend: .thumbnail, .is_pdf
     """
-    if not file_field:
-        return (False, "", "")
+    for obj in objects:
+        if obj.archivo_digital:
+            url = obj.archivo_digital.url
+            obj.is_pdf = url.lower().endswith('.pdf')
+            # Generar miniatura inteligente
+            obj.thumbnail = _get_cloudinary_thumbnail(url)
+        else:
+            obj.is_pdf = False
+            obj.thumbnail = None
+    return objects
 
-    raw_url = getattr(file_field, "url", "") or ""
-    is_pdf = _is_pdf_field(file_field)
+# ============================================================
+# VISTAS
+# ============================================================
 
-    parsed = _parse_cloudinary(raw_url)
-    if not parsed:
-        # No es cloudinary -> usamos url directo
-        return (is_pdf, raw_url, raw_url)
-
-    resource_type, delivery_type, public_id, fmt = parsed
-
-    # VIEW (abrir solo el documento)
-    if is_pdf:
-        # fuerza formato pdf aunque en la URL no venga extensión
-        view_url = _signed_cloudinary(
-            public_id,
-            resource_type=resource_type,   # suele ser raw o image según cómo suba el storage
-            delivery_type=delivery_type,
-            fmt="pdf",
-            transformation=None,
-        )
-        # THUMB (miniatura estable: página 1 -> jpg)
-        thumb_url = _signed_cloudinary(
-            public_id,
-            resource_type="image",
-            delivery_type=delivery_type,
-            fmt="jpg",
-            transformation=[{"page": 1}, {"width": 900, "crop": "scale"}, {"quality": "auto"}, {"fetch_format": "jpg"}],
-        )
-        return (True, view_url, thumb_url)
-
-    # si es imagen
-    view_url = _signed_cloudinary(
-        public_id,
-        resource_type=resource_type,
-        delivery_type=delivery_type,
-        fmt=fmt,
-        transformation=None,
-    )
-    thumb_url = _signed_cloudinary(
-        public_id,
-        resource_type="image",
-        delivery_type=delivery_type,
-        fmt=(fmt or "jpg"),
-        transformation=[{"width": 900, "crop": "fill"}, {"quality": "auto"}],
-    )
-    return (False, view_url, thumb_url)
-
-def _build_doc_pages(file_field, *, max_pages: int = 20, img_width: int = 1200):
-    """
-    Para export (cv_print): si es PDF -> devuelve lista de URLs de páginas como JPG (firmadas).
-    """
-    if not file_field:
-        return (False, [])
-
-    raw_url = getattr(file_field, "url", "") or ""
-    is_pdf = _is_pdf_field(file_field)
-    if not is_pdf:
-        return (False, [raw_url] if raw_url else [])
-
-    parsed = _parse_cloudinary(raw_url)
-    if not parsed:
-        # Sin cloudinary, no podemos renderizar páginas fácilmente
-        return (True, [])
-
-    resource_type, delivery_type, public_id, _fmt = parsed
-
-    # Para contar páginas, usamos URL firmada del PDF
-    pdf_url_signed = _signed_cloudinary(
-        public_id,
-        resource_type=resource_type,
-        delivery_type=delivery_type,
-        fmt="pdf",
-        transformation=None,
-    )
-
-    pages = _count_pdf_pages_from_url(pdf_url_signed)
-    pages = min(max(pages, 1), max_pages)
-
-    urls = []
-    for i in range(1, pages + 1):
-        page_url = _signed_cloudinary(
-            public_id,
-            resource_type="image",
-            delivery_type=delivery_type,
-            fmt="jpg",
-            transformation=[{"page": i}, {"width": img_width, "crop": "scale"}, {"quality": "auto"}, {"fetch_format": "jpg"}],
-        )
-        urls.append(page_url)
-
-    return (True, urls)
-
-def _enrich_items(items, file_attr: str = "archivo_digital"):
-    """
-    Inyecta en cada obj:
-      obj.file_is_pdf
-      obj.file_view_url
-      obj.file_thumb_url
-      obj.doc_pages
-    """
-    for obj in items:
-        f = getattr(obj, file_attr, None)
-
-        is_pdf, view_url, thumb_url = _build_urls_for_file(f)
-        obj.file_is_pdf = is_pdf
-        obj.file_view_url = view_url
-        obj.file_thumb_url = thumb_url
-
-        doc_is_pdf, doc_pages = _build_doc_pages(f)
-        obj.doc_is_pdf = doc_is_pdf
-        obj.doc_pages = doc_pages
-
-    return items
-
-# ============================================
-# Views
-# ============================================
+def doc_redirect(request, model, pk):
+    """ Redirecciona al archivo original (útil para links cortos) """
+    # Mapeo simple de modelos
+    MODELS = {
+        "exp": Experiencialaboral,
+        "cursos": Cursosrealizados,
+        "rec": Reconocimientos,
+        "garage": Ventagarage,
+    }
+    ModelClass = MODELS.get(model)
+    if not ModelClass:
+        raise Http404("Modelo no encontrado")
+    
+    obj = get_object_or_404(ModelClass, pk=pk)
+    if obj.archivo_digital:
+        return redirect(obj.archivo_digital.url)
+    if getattr(obj, 'rutacertificado', None):
+        return redirect(obj.rutacertificado)
+    return redirect('home')
 
 def cv_home(request):
-    perfil = (
-        Datospersonales.objects
-        .filter(activarparaqueseveaenfront=True)
-        .order_by("idperfil")
-        .first()
-    )
+    perfil = Datospersonales.objects.filter(activarparaqueseveaenfront=True).first()
     if perfil:
         return redirect("cv_detail", idperfil=perfil.idperfil)
-    return render(request, "sin_datos.html")
-
+    return HttpResponse("<h1>No hay perfiles activos</h1>")
 
 def perfil_detail(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
-    experiencias = Experiencialaboral.objects.filter(
-        idperfilconqueestaactivo=perfil,
-        activarparaqueseveaenfront=True,
-    ).order_by("-fechainiciogestion")
+    # Consultas
+    experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainiciogestion")
+    cursos = Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainicio")
+    productos_academicos = Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-idproductoacademico")
+    productos_laborales = Productoslaborales.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechaproducto")
+    reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechareconocimiento")
+    ventas_garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil, activo=True).order_by("-fechapublicacion")
 
-    cursos = Cursosrealizados.objects.filter(
-        idperfilconqueestaactivo=perfil,
-        activarparaqueseveaenfront=True,
-    ).order_by("-fechainicio")
-
-    productos_academicos = Productosacademicos.objects.filter(
-        idperfilconqueestaactivo=perfil,
-        activarparaqueseveaenfront=True,
-    ).order_by("-idproductoacademico")
-
-    productos_laborales = Productoslaborales.objects.filter(
-        idperfilconqueestaactivo=perfil,
-        activarparaqueseveaenfront=True,
-    ).order_by("-fechaproducto")
-
-    reconocimientos = Reconocimientos.objects.filter(
-        idperfilconqueestaactivo=perfil,
-        activarparaqueseveaenfront=True,
-    ).order_by("-fechareconocimiento")
-
-    ventas_garage = Ventagarage.objects.filter(
-        idperfilconqueestaactivo=perfil,
-        activo=True,
-    ).order_by("-fechapublicacion")
-
-    # ✅ Miniaturas + Ver PDF + doc_pages (firmado)
-    _enrich_items_for_front(experiencias, model_slug="exp")
-    _enrich_items_for_front(cursos, model_slug="cursos")
-    _enrich_items_for_front(reconocimientos, model_slug="rec")
-    _enrich_items_for_front(ventas_garage, model_slug="garage")
-
+    # Enriquecer con miniaturas para el HTML
+    _enrich_objects(experiencias)
+    _enrich_objects(cursos)
+    _enrich_objects(reconocimientos)
+    _enrich_objects(ventas_garage)
 
     context = {
         "perfil": perfil,
@@ -418,83 +131,82 @@ def perfil_detail(request, idperfil):
 def cv_print(request, idperfil):
     perfil = get_object_or_404(Datospersonales, idperfil=idperfil)
 
-    def want(key: str, default: bool):
-        if request.GET.get("from_modal") == "true":
-            return key in request.GET
-        return default
+    # 1. Lógica de Filtros (Checkboxes)
+    # Si viene del modal, usamos lo que diga el checkbox. Si no, todo True.
+    from_modal = request.GET.get("from_modal") == "true"
+    
+    def check(key):
+        return request.GET.get(key) is not None if from_modal else True
 
-    include_exp = want("exp", True)
-    include_edu = want("edu", True)
-    include_acad = want("acad", True)
-    include_lab = want("lab", True)
-    include_rec = want("rec", True)
-    include_garage = want("garage", False)
+    show_exp = check("exp")
+    show_edu = check("edu")
+    show_acad = check("acad")
+    show_lab = check("lab")
+    show_rec = check("rec")
+    show_garage = check("garage") if from_modal else False # Garage false por defecto
 
-    experiencias = (
-        Experiencialaboral.objects.filter(
-            idperfilconqueestaactivo=perfil,
-            activarparaqueseveaenfront=True,
-        ).order_by("-fechainiciogestion")
-        if include_exp else []
-    )
+    # 2. Filtrar Querysets
+    experiencias = Experiencialaboral.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainiciogestion") if show_exp else []
+    cursos = Cursosrealizados.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True).order_by("-fechainicio") if show_edu else []
+    prod_acad = Productosacademicos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_acad else []
+    prod_lab = Productoslaborales.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_lab else []
+    reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_rec else []
+    garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil, activo=True) if show_garage else []
 
-    cursos = (
-        Cursosrealizados.objects.filter(
-            idperfilconqueestaactivo=perfil,
-            activarparaqueseveaenfront=True,
-        ).order_by("-fechainicio")
-        if include_edu else []
-    )
-
-    productos_academicos = (
-        Productosacademicos.objects.filter(
-            idperfilconqueestaactivo=perfil,
-            activarparaqueseveaenfront=True,
-        ).order_by("-idproductoacademico")
-        if include_acad else []
-    )
-
-    productos_laborales = (
-        Productoslaborales.objects.filter(
-            idperfilconqueestaactivo=perfil,
-            activarparaqueseveaenfront=True,
-        ).order_by("-fechaproducto")
-        if include_lab else []
-    )
-
-    reconocimientos = (
-        Reconocimientos.objects.filter(
-            idperfilconqueestaactivo=perfil,
-            activarparaqueseveaenfront=True,
-        ).order_by("-fechareconocimiento")
-        if include_rec else []
-    )
-
-    ventas_garage = (
-        Ventagarage.objects.filter(
-            idperfilconqueestaactivo=perfil,
-            activo=True,
-        ).order_by("-fechapublicacion")
-        if include_garage else []
-    )
-
-    # ✅ doc_pages firmadas (para anexos en el PDF)
-    _enrich_items(experiencias)
-    _enrich_items(cursos)
-    _enrich_items(reconocimientos)
-    _enrich_items(ventas_garage)
-
+    # 3. Generar PDF Principal (WeasyPrint)
     context = {
         "perfil": perfil,
         "experiencias": experiencias,
         "cursos": cursos,
-        "productos_academicos": productos_academicos,
-        "productos_laborales": productos_laborales,
+        "productos_academicos": prod_acad,
+        "productos_laborales": prod_lab,
         "reconocimientos": reconocimientos,
-        "ventas_garage": ventas_garage,
+        "ventas_garage": garage,
     }
-    return render(request, "cv_print.html", context)
+    
+    html_string = render_to_string('cv_print.html', context)
+    html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
+    
+    main_buffer = io.BytesIO()
+    html.write_pdf(main_buffer)
+    main_buffer.seek(0)
 
+    # 4. Fusión de Anexos (PyPDF + Requests)
+    merger = PdfWriter()
+    
+    # A) Primero el CV generado
+    merger.append(main_buffer)
 
-def sin_datos(request):
-    return render(request, "sin_datos.html")
+    # B) Función para descargar y pegar
+    def append_attachments(queryset):
+        for item in queryset:
+            if item.archivo_digital:
+                url = item.archivo_digital.url
+                if url.lower().endswith(".pdf"):
+                    try:
+                        # Descargar desde Cloudinary
+                        response = requests.get(url, timeout=10)
+                        if response.status_code == 200:
+                            # Crear buffer en memoria para este archivo
+                            remote_pdf = io.BytesIO(response.content)
+                            merger.append(remote_pdf)
+                    except Exception as e:
+                        print(f"Error uniendo PDF {url}: {e}")
+
+    # C) Orden de anexos al final
+    if show_edu: append_attachments(cursos)
+    if show_exp: append_attachments(experiencias)
+    if show_rec: append_attachments(reconocimientos)
+    if show_garage: append_attachments(garage)
+
+    # 5. Salida Final
+    output_buffer = io.BytesIO()
+    merger.write(output_buffer)
+    merger.close()
+    
+    output_buffer.seek(0)
+    response = HttpResponse(output_buffer, content_type='application/pdf')
+    filename = f"CV_{perfil.nombres}_{perfil.apellidos}.pdf"
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    
+    return response

@@ -5,19 +5,52 @@
 
 {% block content %}
 
+<style>
+    .preview-container {
+        width: 100%;
+        height: 180px;
+        background-color: #f8f9fa;
+        overflow: hidden;
+        position: relative;
+        border-bottom: 1px solid #eee;
+    }
+    .preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Recorta para llenar el cuadro */
+        transition: transform 0.3s ease;
+    }
+    .hover-shadow:hover .preview-img {
+        transform: scale(1.05); /* Efecto zoom suave */
+    }
+    .pdf-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #dc3545;
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: bold;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+</style>
+
 <div class="hero-card-custom">
     {% if perfil.foto_perfil_url %}
         <img src="{{ perfil.foto_perfil_url }}" class="hero-avatar-img" alt="Foto de Perfil">
     {% else %}
         <div class="hero-avatar-placeholder bg-dark text-white fw-bold fs-2">CV</div>
     {% endif %}
-
+    
     <div class="hero-info w-100">
         <h1 class="display-5 fw-bold text-dark mb-2">{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
         {% if perfil.descripcionperfil %}
             <div class="lead text-primary fw-semibold mb-3">{{ perfil.descripcionperfil }}</div>
         {% endif %}
-
+        
         <div class="floating-container">
             <span class="floating-tag"><i class="bi bi-person-vcard me-1"></i>{{ perfil.numerocedula }}</span>
             <span class="floating-tag"><i class="bi bi-flag me-1"></i>{{ perfil.nacionalidad }}</span>
@@ -30,10 +63,10 @@
 </div>
 
 <div class="row g-4 align-items-start">
-
+    
     <div class="col-lg-4">
         <aside class="sidebar-sticky-custom">
-
+            
             <div class="btn-download-group mb-4 p-3 bg-white border rounded-3 shadow-sm">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <h6 class="fw-bold m-0"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Exportar CV</h6>
@@ -52,93 +85,42 @@
             <div class="mb-4">
                 <div class="sidebar-heading-custom"><i class="bi bi-chat-dots text-primary me-1"></i> Contacto</div>
                 {% if perfil.telefonoconvencional %}
-                <div class="bg-white p-2 mb-2 border rounded hover-shadow">
-                    <div class="info-box-label">Móvil</div>
-                    <div class="fw-semibold text-dark">{{ perfil.telefonoconvencional }}</div>
-                </div>
+                <div class="bg-white p-2 mb-2 border rounded hover-shadow"><div class="info-box-label">Móvil</div><div class="fw-semibold text-dark">{{ perfil.telefonoconvencional }}</div></div>
                 {% endif %}
                 {% if perfil.telefonofijo %}
-                <div class="bg-white p-2 mb-2 border rounded hover-shadow">
-                    <div class="info-box-label">Fijo</div>
-                    <div class="fw-semibold text-dark">{{ perfil.telefonofijo }}</div>
-                </div>
+                <div class="bg-white p-2 mb-2 border rounded hover-shadow"><div class="info-box-label">Fijo</div><div class="fw-semibold text-dark">{{ perfil.telefonofijo }}</div></div>
                 {% endif %}
                 {% if perfil.sitioweb %}
-                <div class="bg-white p-2 mb-2 border rounded hover-shadow">
-                    <div class="info-box-label">Web</div>
-                    <div class="text-truncate">
-                        <a href="{{ perfil.sitioweb }}" target="_blank" class="text-decoration-none">{{ perfil.sitioweb }}</a>
-                    </div>
-                </div>
+                <div class="bg-white p-2 mb-2 border rounded hover-shadow"><div class="info-box-label">Web</div><div class="text-truncate"><a href="{{ perfil.sitioweb }}" target="_blank" class="text-decoration-none">{{ perfil.sitioweb }}</a></div></div>
                 {% endif %}
             </div>
 
             <div class="mb-4">
                 <div class="sidebar-heading-custom"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Ubicación</div>
-                <div class="bg-white p-2 mb-2 border rounded hover-shadow">
-                    <div class="info-box-label">Domicilio</div>
-                    <div class="fw-semibold text-dark small">{{ perfil.direcciondomiciliaria|default:"No registrado" }}</div>
-                </div>
+                <div class="bg-white p-2 mb-2 border rounded hover-shadow"><div class="info-box-label">Domicilio</div><div class="fw-semibold text-dark small">{{ perfil.direcciondomiciliaria|default:"No registrado" }}</div></div>
                 {% if perfil.direcciontrabajo %}
-                <div class="bg-white p-2 mb-2 border rounded hover-shadow">
-                    <div class="info-box-label">Trabajo</div>
-                    <div class="fw-semibold text-dark small">{{ perfil.direcciontrabajo }}</div>
-                </div>
+                <div class="bg-white p-2 mb-2 border rounded hover-shadow"><div class="info-box-label">Trabajo</div><div class="fw-semibold text-dark small">{{ perfil.direcciontrabajo }}</div></div>
                 {% endif %}
             </div>
 
-            <div class="mb-4">
-                <div class="sidebar-heading-custom"><i class="bi bi-person-badge-fill text-success me-1"></i> Detalles</div>
-                <div class="row g-2">
-                    <div class="col-6">
-                        <div class="bg-white p-2 border rounded h-100">
-                            <div class="info-box-label info-box-label--tiny">NACIMIENTO</div>
-                            <div class="fw-bold small">
-                                {% if perfil.fechanacimiento %}{{ perfil.fechanacimiento|date:"d M Y" }}{% else %}—{% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="bg-white p-2 border rounded h-100">
-                            <div class="info-box-label info-box-label--tiny">ESTADO CIVIL</div>
-                            <div class="fw-bold small">{{ perfil.estadocivil|default:"—" }}</div>
-                        </div>
-                    </div>
-                    {% if perfil.sexo %}
-                    <div class="col-12">
-                        <div class="bg-white p-2 border rounded h-100">
-                            <div class="info-box-label info-box-label--tiny">GÉNERO</div>
-                            <div class="fw-bold small">
-                                {% if perfil.sexo == 'M' %}Masculino{% elif perfil.sexo == 'F' %}Femenino{% else %}{{ perfil.sexo }}{% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="text-center mt-4">
-                <a class="btn btn-sm btn-link text-muted" href="/admin/">Administrar Datos</a>
-            </div>
-
+            <div class="text-center mt-4"><a class="btn btn-sm btn-link text-muted" href="/admin/">Administrar Datos</a></div>
         </aside>
     </div>
 
     <div class="col-lg-8">
-
+        
         <div class="sticky-nav-container">
             <ul class="nav nav-pills nav-pills-custom" id="pills-tab" role="tablist">
                 <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-resumen"><i class="bi bi-grid-fill me-1"></i>Resumen</button></li>
-                {% if experiencias %}<li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-exp"><i class="bi bi-briefcase me-1"></i>Experiencia</button></li>{% endif %}
+                {% if experiencias %}<li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-exp"><i class="bi bi-briefcase me-1"></i>Exp</button></li>{% endif %}
                 {% if cursos %}<li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-cursos"><i class="bi bi-mortarboard me-1"></i>Cursos</button></li>{% endif %}
-                {% if productos_academicos or productos_laborales %}<li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-prod"><i class="bi bi-book me-1"></i>Productos</button></li>{% endif %}
                 {% if reconocimientos %}<li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-rec"><i class="bi bi-trophy me-1"></i>Logros</button></li>{% endif %}
                 {% if ventas_garage %}<li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-garage"><i class="bi bi-shop me-1"></i>Garage</button></li>{% endif %}
             </ul>
         </div>
 
         <div class="tab-content" id="pills-tabContent">
-
+            
             <div class="tab-pane fade show active" id="pills-resumen" role="tabpanel">
                 <div class="content-section">
                     <div class="d-flex align-items-center mb-3">
@@ -146,55 +128,41 @@
                         <hr class="flex-grow-1 ms-3">
                     </div>
                     <div class="row g-3">
-                        <div class="col-6 col-lg-4"><div class="p-3 bg-white rounded text-center h-100 border hover-shadow"><i class="bi bi-briefcase fs-2 text-primary opacity-25 mb-1 d-block"></i><h2 class="fw-bold text-primary mb-0">{{ experiencias|length }}</h2><div class="text-label-small text-muted">Experiencias</div></div></div>
+                        <div class="col-6 col-lg-4"><div class="p-3 bg-white rounded text-center h-100 border hover-shadow"><i class="bi bi-briefcase fs-2 text-primary opacity-25 mb-1 d-block"></i><h2 class="fw-bold text-primary mb-0">{{ experiences|length }}</h2><div class="text-label-small text-muted">Experiencias</div></div></div>
                         <div class="col-6 col-lg-4"><div class="p-3 bg-white rounded text-center h-100 border hover-shadow"><i class="bi bi-mortarboard fs-2 text-success opacity-25 mb-1 d-block"></i><h2 class="fw-bold text-success mb-0">{{ cursos|length }}</h2><div class="text-label-small text-muted">Cursos</div></div></div>
-                        <div class="col-6 col-lg-4"><div class="p-3 bg-white rounded text-center h-100 border hover-shadow"><i class="bi bi-book fs-2 text-info opacity-25 mb-1 d-block"></i><h2 class="fw-bold text-info mb-0">{{ productos_academicos|length }}</h2><div class="text-label-small text-muted">Académicos</div></div></div>
-                        <div class="col-6 col-lg-4"><div class="p-3 bg-white rounded text-center h-100 border hover-shadow"><i class="bi bi-tools fs-2 text-secondary opacity-25 mb-1 d-block"></i><h2 class="fw-bold text-secondary mb-0">{{ productos_laborales|length }}</h2><div class="text-label-small text-muted">Laborales</div></div></div>
                         <div class="col-6 col-lg-4"><div class="p-3 bg-white rounded text-center h-100 border hover-shadow"><i class="bi bi-trophy fs-2 text-warning opacity-25 mb-1 d-block"></i><h2 class="fw-bold text-warning mb-0">{{ reconocimientos|length }}</h2><div class="text-label-small text-muted">Logros</div></div></div>
-                        <div class="col-6 col-lg-4"><div class="p-3 bg-white rounded text-center h-100 border hover-shadow"><i class="bi bi-tag fs-2 text-danger opacity-25 mb-1 d-block"></i><h2 class="fw-bold text-danger mb-0">{{ ventas_garage|length }}</h2><div class="text-label-small text-muted">Garage</div></div></div>
                     </div>
                 </div>
             </div>
 
-            {% if experiencias %}
             <div class="tab-pane fade" id="pills-exp" role="tabpanel">
                 <div class="content-section">
                     <h4 class="fw-bold mb-4 ps-2">Trayectoria Laboral</h4>
                     <div class="row g-3">
                         {% for e in experiencias %}
                         <div class="col-md-6">
-                            <div class="border rounded p-3 h-100 bg-white shadow-sm position-relative hover-shadow">
+                            <div class="border rounded h-100 bg-white shadow-sm hover-shadow overflow-hidden d-flex flex-column">
                                 <div class="preview-container">
                                     {% if e.archivo_digital %}
-                                        <a href="{{ e.archivo_digital.url }}" target="_blank" rel="noopener">
-                                            {% if e.doc_pages %}
-                                                <img src="{{ e.doc_pages.0 }}" class="preview-img" alt="Preview">
-                                            {% else %}
-                                                <img src="{{ e.archivo_digital.url }}" class="preview-img" alt="Preview">
-                                            {% endif %}
+                                        <a href="{{ e.archivo_digital.url }}" target="_blank">
+                                            {% if e.is_pdf %}<span class="pdf-badge">PDF</span>{% endif %}
+                                            <img src="{{ e.thumbnail }}" class="preview-img" alt="Documento">
                                         </a>
-                                        {% if e.doc_is_pdf %}
-                                            <span class="preview-badge">PDF</span>
-                                        {% endif %}
                                     {% else %}
-                                        <i class="bi bi-briefcase text-secondary opacity-25" style="font-size: 3rem;"></i>
+                                        <div class="d-flex align-items-center justify-content-center h-100">
+                                            <i class="bi bi-briefcase text-muted opacity-25 fs-1"></i>
+                                        </div>
                                     {% endif %}
                                 </div>
-
-                                <h6 class="fw-bold mb-1 text-dark">{{ e.cargodesempenado }}</h6>
-                                <div class="text-primary fw-semibold small mb-2">{{ e.nombrempresa }}</div>
-                                <div class="small text-muted mb-2">
-                                    <i class="bi bi-calendar3 me-1"></i>
-                                    {{ e.fechainiciogestion|date:"M Y" }} - {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}Actual{% endif %}
-                                </div>
-
-                                <div class="d-grid gap-2 mt-auto">
-                                    {% if e.archivo_digital %}
-                                        <a href="{{ e.archivo_digital.url }}" target="_blank" rel="noopener" class="btn btn-outline-danger btn-sm fw-bold">Ver Documento</a>
-                                    {% endif %}
-                                    {% if e.rutacertificado %}
-                                        <a href="{{ e.rutacertificado }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-bold">Link Externo</a>
-                                    {% endif %}
+                                <div class="p-3 d-flex flex-column flex-grow-1">
+                                    <h6 class="fw-bold mb-1 text-dark">{{ e.cargodesempenado }}</h6>
+                                    <div class="text-primary fw-semibold small mb-2">{{ e.nombrempresa }}</div>
+                                    <div class="small text-muted mb-2"><i class="bi bi-calendar3 me-1"></i>{{ e.fechainiciogestion|date:"M Y" }}</div>
+                                    <div class="mt-auto pt-2">
+                                        {% if e.archivo_digital %}
+                                            <a href="{{ e.archivo_digital.url }}" target="_blank" class="btn btn-outline-danger btn-sm w-100 fw-bold"><i class="bi bi-file-pdf me-1"></i>Ver Documento</a>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -202,48 +170,34 @@
                     </div>
                 </div>
             </div>
-            {% endif %}
 
-            {% if cursos %}
             <div class="tab-pane fade" id="pills-cursos" role="tabpanel">
                 <div class="content-section">
                     <h4 class="fw-bold mb-4 ps-2">Educación Continua</h4>
                     <div class="row g-3">
                         {% for c in cursos %}
                         <div class="col-md-6">
-                            <div class="border rounded p-3 h-100 bg-white shadow-sm position-relative hover-shadow">
+                            <div class="border rounded h-100 bg-white shadow-sm hover-shadow overflow-hidden d-flex flex-column">
                                 <div class="preview-container">
                                     {% if c.archivo_digital %}
-                                        <a href="{{ c.archivo_digital.url }}" target="_blank" rel="noopener">
-                                            {% if c.doc_pages %}
-                                                <img src="{{ c.doc_pages.0 }}" class="preview-img" alt="Preview">
-                                            {% else %}
-                                                <img src="{{ c.archivo_digital.url }}" class="preview-img" alt="Preview">
-                                            {% endif %}
+                                        <a href="{{ c.archivo_digital.url }}" target="_blank">
+                                            {% if c.is_pdf %}<span class="pdf-badge">PDF</span>{% endif %}
+                                            <img src="{{ c.thumbnail }}" class="preview-img" alt="Certificado">
                                         </a>
-                                        {% if c.doc_is_pdf %}
-                                            <span class="preview-badge">PDF</span>
-                                        {% endif %}
                                     {% else %}
-                                        <i class="bi bi-mortarboard text-secondary opacity-25" style="font-size: 3rem;"></i>
+                                        <div class="d-flex align-items-center justify-content-center h-100">
+                                            <i class="bi bi-mortarboard text-muted opacity-25 fs-1"></i>
+                                        </div>
                                     {% endif %}
                                 </div>
-
-                                <h6 class="fw-bold mb-1 text-dark">{{ c.nombrecurso }}</h6>
-                                <div class="small text-muted mb-2">{{ c.entidadpatrocinadora }}</div>
-
-                                <div class="d-flex justify-content-between align-items-center mb-2 border-top pt-2">
-                                    <span class="badge bg-light text-dark border">{{ c.totalhoras }} Horas</span>
-                                    <span class="small text-muted">{{ c.fechainicio|date:"M Y" }}</span>
-                                </div>
-
-                                <div class="d-grid gap-2 mt-auto">
-                                    {% if c.archivo_digital %}
-                                        <a href="{{ c.archivo_digital.url }}" target="_blank" rel="noopener" class="btn btn-outline-danger btn-sm fw-bold">Ver Certificado</a>
-                                    {% endif %}
-                                    {% if c.rutacertificado %}
-                                        <a href="{{ c.rutacertificado }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-bold">Validar</a>
-                                    {% endif %}
+                                <div class="p-3 d-flex flex-column flex-grow-1">
+                                    <h6 class="fw-bold mb-1 text-dark">{{ c.nombrecurso }}</h6>
+                                    <div class="small text-muted mb-2">{{ c.entidadpatrocinadora }}</div>
+                                    <div class="mt-auto pt-2">
+                                        {% if c.archivo_digital %}
+                                            <a href="{{ c.archivo_digital.url }}" target="_blank" class="btn btn-outline-danger btn-sm w-100 fw-bold"><i class="bi bi-file-pdf me-1"></i>Ver Certificado</a>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -251,74 +205,34 @@
                     </div>
                 </div>
             </div>
-            {% endif %}
 
-            {% if productos_academicos or productos_laborales %}
-            <div class="tab-pane fade" id="pills-prod" role="tabpanel">
-                <div class="bg-white p-4 border rounded shadow-sm mb-4">
-                    <h5 class="fw-bold border-bottom pb-2 mb-3 text-info"><i class="bi bi-book me-2"></i>Productos Académicos</h5>
-                    {% for p in productos_academicos %}
-                    <div class="mb-3 pb-3 border-bottom">
-                        <h6 class="fw-bold text-dark">{{ p.nombrerecurso }}</h6>
-                        <span class="badge bg-secondary mb-2">{{ p.clasificador }}</span>
-                        <p class="small text-secondary mb-0">{{ p.descripcion }}</p>
-                    </div>
-                    {% empty %}
-                    <div class="text-muted small">Sin productos académicos.</div>
-                    {% endfor %}
-                </div>
-
-                <div class="bg-white p-4 border rounded shadow-sm">
-                    <h5 class="fw-bold border-bottom pb-2 mb-3 text-secondary"><i class="bi bi-tools me-2"></i>Productos Laborales</h5>
-                    {% for p in productos_laborales %}
-                    <div class="mb-3">
-                        <h6 class="fw-bold text-dark">{{ p.nombreproducto }}</h6>
-                        <div class="small text-muted mb-1">{{ p.fechaproducto|date:"d M Y" }}</div>
-                        <p class="small text-secondary">{{ p.descripcion }}</p>
-                    </div>
-                    {% empty %}
-                    <div class="text-muted small">Sin productos laborales.</div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            {% if reconocimientos %}
             <div class="tab-pane fade" id="pills-rec" role="tabpanel">
                 <div class="content-section">
                     <h4 class="fw-bold mb-4 ps-2">Méritos y Logros</h4>
                     <div class="row g-3">
                         {% for r in reconocimientos %}
                         <div class="col-md-6">
-                            <div class="border rounded p-3 h-100 bg-white shadow-sm position-relative hover-shadow">
+                            <div class="border rounded h-100 bg-white shadow-sm hover-shadow overflow-hidden d-flex flex-column">
                                 <div class="preview-container">
                                     {% if r.archivo_digital %}
-                                        <a href="{{ r.archivo_digital.url }}" target="_blank" rel="noopener">
-                                            {% if r.doc_pages %}
-                                                <img src="{{ r.doc_pages.0 }}" class="preview-img" alt="Preview">
-                                            {% else %}
-                                                <img src="{{ r.archivo_digital.url }}" class="preview-img" alt="Preview">
-                                            {% endif %}
+                                        <a href="{{ r.archivo_digital.url }}" target="_blank">
+                                            {% if r.is_pdf %}<span class="pdf-badge">PDF</span>{% endif %}
+                                            <img src="{{ r.thumbnail }}" class="preview-img" alt="Logro">
                                         </a>
-                                        {% if r.doc_is_pdf %}
-                                            <span class="preview-badge">PDF</span>
-                                        {% endif %}
                                     {% else %}
-                                        <i class="bi bi-trophy text-secondary opacity-25" style="font-size: 3rem;"></i>
+                                        <div class="d-flex align-items-center justify-content-center h-100">
+                                            <i class="bi bi-trophy text-muted opacity-25 fs-1"></i>
+                                        </div>
                                     {% endif %}
                                 </div>
-
-                                <h6 class="fw-bold mb-1 text-dark">{{ r.tiporeconocimiento }}</h6>
-                                <div class="small text-primary fw-bold mb-2">{{ r.entidadpatrocinadora }}</div>
-                                <div class="small text-muted mb-2">{{ r.descripcionreconocimiento }}</div>
-
-                                <div class="d-grid gap-2 mt-auto">
-                                    {% if r.archivo_digital %}
-                                        <a href="{{ r.archivo_digital.url }}" target="_blank" rel="noopener" class="btn btn-outline-danger btn-sm fw-bold">Ver Documento</a>
-                                    {% endif %}
-                                    {% if r.rutacertificado %}
-                                        <a href="{{ r.rutacertificado }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-bold">Link Externo</a>
-                                    {% endif %}
+                                <div class="p-3 d-flex flex-column flex-grow-1">
+                                    <h6 class="fw-bold mb-1 text-dark">{{ r.tiporeconocimiento }}</h6>
+                                    <div class="small text-primary fw-bold mb-2">{{ r.entidadpatrocinadora }}</div>
+                                    <div class="mt-auto pt-2">
+                                        {% if r.archivo_digital %}
+                                            <a href="{{ r.archivo_digital.url }}" target="_blank" class="btn btn-outline-danger btn-sm w-100 fw-bold"><i class="bi bi-file-pdf me-1"></i>Ver Documento</a>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -326,66 +240,47 @@
                     </div>
                 </div>
             </div>
-            {% endif %}
 
-            {% if ventas_garage %}
-            <div class="tab-pane fade" id="pills-garage" role="tabpanel">
+             <div class="tab-pane fade" id="pills-garage" role="tabpanel">
                 <div class="content-section">
                     <h4 class="fw-bold mb-4 ps-2">Venta de Garage</h4>
                     <div class="row g-3">
                         {% for v in ventas_garage %}
                         <div class="col-md-6">
-                            <div class="border rounded p-3 h-100 bg-white shadow-sm position-relative hover-shadow">
+                            <div class="border rounded h-100 bg-white shadow-sm hover-shadow overflow-hidden d-flex flex-column">
                                 <div class="preview-container">
                                     {% if v.archivo_digital %}
-                                        <a href="{{ v.archivo_digital.url }}" target="_blank" rel="noopener">
-                                            {% if v.doc_pages %}
-                                                <img src="{{ v.doc_pages.0 }}" class="preview-img" alt="Preview">
-                                            {% else %}
-                                                <img src="{{ v.archivo_digital.url }}" class="preview-img" alt="Preview">
-                                            {% endif %}
+                                        <a href="{{ v.archivo_digital.url }}" target="_blank">
+                                            {% if v.is_pdf %}<span class="pdf-badge">PDF</span>{% endif %}
+                                            <img src="{{ v.thumbnail }}" class="preview-img" alt="Garage">
                                         </a>
-                                        {% if v.doc_is_pdf %}
-                                            <span class="preview-badge">PDF</span>
+                                    {% else %}
+                                        {% if v.imagen %}
+                                            <img src="{{ v.imagen }}" class="preview-img" alt="Garage">
+                                        {% else %}
+                                            <div class="d-flex align-items-center justify-content-center h-100">
+                                                <i class="bi bi-shop text-muted opacity-25 fs-1"></i>
+                                            </div>
                                         {% endif %}
-                                    {% elif v.imagen %}
-                                        <img src="{{ v.imagen }}" class="preview-img" alt="Producto">
-                                    {% else %}
-                                        <i class="bi bi-shop text-secondary opacity-25" style="font-size: 3rem;"></i>
                                     {% endif %}
                                 </div>
-
-                                <h6 class="fw-bold mb-1 text-dark">{{ v.nombreproducto }}</h6>
-                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="p-3 d-flex flex-column flex-grow-1">
+                                    <h6 class="fw-bold mb-1 text-dark">{{ v.nombreproducto }}</h6>
                                     <span class="text-success fw-bold fs-5">${{ v.precio }}</span>
-                                    {% if v.estado == 'Bueno' %}
-                                        <span class="badge bg-success">Bueno</span>
-                                    {% elif v.estado == 'Regular' %}
-                                        <span class="badge bg-warning text-dark">Regular</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">{{ v.estado }}</span>
-                                    {% endif %}
+                                    <div class="mt-auto pt-2">
+                                        {% if v.archivo_digital %}
+                                            <a href="{{ v.archivo_digital.url }}" target="_blank" class="btn btn-outline-danger btn-sm w-100 fw-bold">Ver Archivo</a>
+                                        {% endif %}
+                                    </div>
                                 </div>
-
-                                <div class="small text-muted border-top pt-2 mt-2">
-                                    <i class="bi bi-calendar3 me-1"></i>Pub: {{ v.fechapublicacion|date:"d M Y" }}
-                                </div>
-                                <div class="small text-secondary mt-1">{{ v.descripcion|truncatewords:10 }}</div>
-
-                                {% if v.archivo_digital %}
-                                <div class="d-grid gap-2 mt-3">
-                                    <a href="{{ v.archivo_digital.url }}" target="_blank" rel="noopener" class="btn btn-outline-danger btn-sm fw-bold">Ver Archivo</a>
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
-            {% endif %}
 
-        </div>
+        </div> 
     </div>
 </div>
 
@@ -396,60 +291,31 @@
                 <h5 class="modal-title fw-bold">Personalizar PDF</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <form action="{% url 'cv_print' perfil.idperfil %}" method="GET" target="_blank">
                 <input type="hidden" name="from_modal" value="true">
                 <div class="modal-body">
-                    <p class="text-muted small mb-3">Opciones de impresión:</p>
+                    <p class="text-muted small mb-3">Elige qué incluir en tu CV y en los anexos finales:</p>
                     <div class="d-flex flex-column gap-2">
-                        <div class="form-check p-2 border rounded hover-shadow bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="exp" id="c1" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c1">Experiencia</label>
-                        </div>
-                        <div class="form-check p-2 border rounded hover-shadow bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="edu" id="c2" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c2">Formación</label>
-                        </div>
-                        <div class="form-check p-2 border rounded hover-shadow bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="acad" id="c3" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c3">Académico</label>
-                        </div>
-                        <div class="form-check p-2 border rounded hover-shadow bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="lab" id="c4" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c4">Laboral</label>
-                        </div>
-                        <div class="form-check p-2 border rounded hover-shadow bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="rec" id="c5" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c5">Logros</label>
-                        </div>
-                        <div class="form-check p-2 border rounded hover-shadow bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="garage" id="c6">
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c6">Garage</label>
-                        </div>
+                        <div class="form-check p-2 border rounded hover-shadow bg-light"><input class="form-check-input ms-1" type="checkbox" name="exp" id="c1" checked><label class="form-check-label fw-bold ms-2 w-100" for="c1">Experiencia</label></div>
+                        <div class="form-check p-2 border rounded hover-shadow bg-light"><input class="form-check-input ms-1" type="checkbox" name="edu" id="c2" checked><label class="form-check-label fw-bold ms-2 w-100" for="c2">Formación</label></div>
+                        <div class="form-check p-2 border rounded hover-shadow bg-light"><input class="form-check-input ms-1" type="checkbox" name="acad" id="c3" checked><label class="form-check-label fw-bold ms-2 w-100" for="c3">Académico</label></div>
+                        <div class="form-check p-2 border rounded hover-shadow bg-light"><input class="form-check-input ms-1" type="checkbox" name="lab" id="c4" checked><label class="form-check-label fw-bold ms-2 w-100" for="c4">Laboral</label></div>
+                        <div class="form-check p-2 border rounded hover-shadow bg-light"><input class="form-check-input ms-1" type="checkbox" name="rec" id="c5" checked><label class="form-check-label fw-bold ms-2 w-100" for="c5">Logros</label></div>
+                        <div class="form-check p-2 border rounded hover-shadow bg-light"><input class="form-check-input ms-1" type="checkbox" name="garage" id="c6"><label class="form-check-label fw-bold ms-2 w-100" for="c6">Garage</label></div>
                     </div>
                 </div>
-
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-file-earmark-pdf me-2"></i>Generar
-                    </button>
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-file-earmark-pdf me-2"></i>Generar CV Completo</button>
                 </div>
             </form>
-
         </div>
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    VanillaTilt.init(document.querySelectorAll(".hover-shadow"), {
-      max: 3,
-      speed: 400,
-      glare: true,
-      "max-glare": 0.05
+    document.addEventListener("DOMContentLoaded", function() {
+        VanillaTilt.init(document.querySelectorAll(".hover-shadow"), { max: 3, speed: 400, glare: true, "max-glare": 0.05 });
     });
-  });
 </script>
-
 {% endblock %}
