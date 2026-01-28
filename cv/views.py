@@ -1,4 +1,3 @@
-# cv/views.py
 import io
 import requests
 from django.shortcuts import render, get_object_or_404, redirect
@@ -96,7 +95,7 @@ def cv_home(request):
     return sin_datos(request)
 
 def sin_datos(request):
-    """ Esta es la función que faltaba y causaba el error """
+    """ Función para evitar errores cuando no hay perfiles """
     return HttpResponse(
         "<div style='text-align:center; padding:50px; font-family:sans-serif;'>"
         "<h1>No hay perfiles activos</h1>"
@@ -158,7 +157,7 @@ def cv_print(request, idperfil):
     reconocimientos = Reconocimientos.objects.filter(idperfilconqueestaactivo=perfil, activarparaqueseveaenfront=True) if show_rec else []
     garage = Ventagarage.objects.filter(idperfilconqueestaactivo=perfil, activo=True) if show_garage else []
 
-    # 3. Generar PDF Principal
+    # 3. Generar PDF Principal (Usando estilos incrustados en HTML)
     context = {
         "perfil": perfil,
         "experiencias": experiencias,
@@ -170,6 +169,8 @@ def cv_print(request, idperfil):
     }
     
     html_string = render_to_string('cv_print.html', context)
+    
+    # Renderizamos PDF sin fetcher externo, confiando en el CSS incrustado
     html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
     
     main_buffer = io.BytesIO()
@@ -186,6 +187,7 @@ def cv_print(request, idperfil):
                 url = item.archivo_digital.url
                 if url.lower().endswith(".pdf"):
                     try:
+                        # Timeout para evitar que se cuelgue si Cloudinary tarda
                         response = requests.get(url, timeout=10)
                         if response.status_code == 200:
                             remote_pdf = io.BytesIO(response.content)

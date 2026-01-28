@@ -1,248 +1,236 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>CV - {{ perfil.nombres }}</title>
-    <link rel="stylesheet" href="{% static 'css/print_cv.css' %}">
-
+    <title>CV - {{ perfil.nombres }} {{ perfil.apellidos }}</title>
     <style>
-        .page-break {
-            page-break-before: always;
-            break-before: page;
+        /* ESTILOS CSS INCRUSTADOS PARA PDF ROBUSTO */
+        @page {
+            size: A4;
+            margin: 2.5cm;
+            @bottom-center {
+                content: "Página " counter(page);
+                font-size: 9pt;
+                color: #888;
+            }
         }
-        .keep-together {
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            font-size: 11pt;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 24pt;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .lead {
+            font-size: 14pt;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        .contact-info {
+            margin-bottom: 30px;
+            font-size: 10pt;
+            color: #555;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2c3e50;
+            font-size: 16pt;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .section-item {
+            margin-bottom: 15px;
             page-break-inside: avoid;
-            break-inside: avoid;
         }
-        .doc-page {
+        .item-header {
             width: 100%;
-            height: auto;
-            display: block;
-            margin: 10px 0;
+            margin-bottom: 2px;
         }
-        .annex-title {
-            font-weight: 700;
-            margin: 0 0 10px 0;
+        /* Tablas simuladas para alineación */
+        .row-table {
+            display: table;
+            width: 100%;
+        }
+        .col-left {
+            display: table-cell;
+            width: 75%;
+            vertical-align: top;
+        }
+        .col-right {
+            display: table-cell;
+            width: 25%;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .item-title {
+            font-weight: bold;
+            font-size: 12pt;
+            color: #000;
+        }
+        .item-subtitle {
+            font-weight: 600;
+            color: #3498db;
+            font-size: 10pt;
+        }
+        .item-date {
+            font-size: 9pt;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .item-desc {
+            font-size: 10pt;
+            margin-top: 2px;
+            color: #555;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 5px;
+            background: #f0f0f0;
+            color: #666;
+            border-radius: 3px;
+            font-size: 8pt;
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
-
-<div class="page-container">
-
-    <div class="sidebar">
-        {% if perfil.foto_perfil_url %}
-            <img src="{{ perfil.foto_perfil_url }}" class="profile-img">
-        {% else %}
-            <div style="height: 20px;"></div>
+    <div class="header">
+        <h1>{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
+        {% if perfil.descripcionperfil %}
+            <div class="lead">{{ perfil.descripcionperfil }}</div>
         {% endif %}
-
-        <div class="sidebar-block">
-            <h3>Contacto</h3>
-
-            {% if perfil.telefonoconvencional %}
-            <div class="mini-entry">
-                <span class="small-title">Móvil:</span>
-                <p>{{ perfil.telefonoconvencional }}</p>
-            </div>
-            {% endif %}
-
-            {% if perfil.telefonofijo %}
-            <div class="mini-entry">
-                <span class="small-title">Fijo:</span>
-                <p>{{ perfil.telefonofijo }}</p>
-            </div>
-            {% endif %}
-
-            {% if perfil.sitioweb %}
-            <div class="mini-entry">
-                <span class="small-title">Web:</span>
-                <a href="{{ perfil.sitioweb }}" class="break-link" target="_blank">
-                    {{ perfil.sitioweb }}
-                </a>
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="sidebar-block">
-            <h3>Ubicación</h3>
-            <div class="mini-entry">
-                <span class="small-title">Domicilio:</span>
-                <p>{{ perfil.direcciondomiciliaria }}</p>
-            </div>
-            {% if perfil.direcciontrabajo %}
-            <div class="mini-entry">
-                <span class="small-title">Trabajo:</span>
-                <p>{{ perfil.direcciontrabajo }}</p>
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="sidebar-block">
-            <h3>Perfil</h3>
-            <div class="mini-entry"><span class="small-title">Nacionalidad:</span> <p>{{ perfil.nacionalidad }}</p></div>
-            <div class="mini-entry"><span class="small-title">Cédula:</span> <p>{{ perfil.numerocedula }}</p></div>
-            <div class="mini-entry"><span class="small-title">Nacimiento:</span> <p>{{ perfil.fechanacimiento|date:"d/m/Y" }}</p></div>
-            <div class="mini-entry"><span class="small-title">Estado Civil:</span> <p>{{ perfil.estadocivil }}</p></div>
-            {% if perfil.sexo %}
-            <div class="mini-entry"><span class="small-title">Sexo:</span> <p>{{ perfil.sexo }}</p></div>
-            {% endif %}
-            {% if perfil.licenciaconducir %}
-            <div class="mini-entry"><span class="small-title">Licencia:</span> <p>{{ perfil.licenciaconducir }}</p></div>
-            {% endif %}
+        <div class="contact-info">
+            <strong>Contacto:</strong> {{ perfil.numerocedula }} | 
+            {{ perfil.nacionalidad }} | 
+            {{ perfil.lugarnacimiento }} <br>
+            {% if perfil.telefonoconvencional %}Móvil: {{ perfil.telefonoconvencional }} | {% endif %}
+            {% if perfil.sitioweb %}{{ perfil.sitioweb }}{% endif %}
         </div>
     </div>
 
-    <div class="main-content">
-
-        <div class="header">
-            <h1>{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
-            {% if perfil.descripcionperfil %}
-                <div class="subtitle">{{ perfil.descripcionperfil }}</div>
-            {% endif %}
-        </div>
-
-        {% if experiencias %}
-        <div class="main-block">
-            <div class="section-title">Experiencia Laboral</div>
-
-            {% for e in experiencias %}
-            <div class="experience-entry keep-together">
-                <div class="exp-header">
-                    <span class="role">{{ e.cargodesempenado }}</span>
-                    <span class="date">
-                        {{ e.fechainiciogestion|date:"M Y" }} -
-                        {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}Actual{% endif %}
-                    </span>
+    {% if experiencias %}
+    <section>
+        <h2>EXPERIENCIA LABORAL</h2>
+        {% for e in experiencias %}
+        <div class="section-item">
+            <div class="row-table">
+                <div class="col-left">
+                    <div class="item-title">{{ e.cargodesempenado }}</div>
+                    <div class="item-subtitle">{{ e.nombrempresa }}</div>
                 </div>
-                <div class="company">{{ e.nombrempresa }}</div>
-                <div class="exp-desc">{{ e.descripcionfunciones|linebreaksbr }}</div>
-            </div>
-
-            {% if e.doc_pages %}
-            <div class="annex page-break">
-                <div class="annex-title">Anexo — Soporte / Certificado (Experiencia)</div>
-                {% for page_url in e.doc_pages %}
-                    <img src="{{ page_url }}" class="doc-page" alt="Documento">
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endfor %}
-
-        </div>
-        {% endif %}
-
-        {% if cursos %}
-        <div class="main-block">
-            <div class="section-title">Formación y Certificaciones</div>
-
-            {% for c in cursos %}
-            <div class="experience-entry keep-together">
-                <div class="exp-header">
-                    <span class="role">{{ c.nombrecurso }}</span>
-                    <span class="date">{{ c.totalhoras }} Horas</span>
-                </div>
-                <div class="company">{{ c.entidadpatrocinadora }}</div>
-            </div>
-
-            {% if c.doc_pages %}
-            <div class="annex page-break">
-                <div class="annex-title">Anexo — Certificado (Curso)</div>
-                {% for page_url in c.doc_pages %}
-                    <img src="{{ page_url }}" class="doc-page" alt="Certificado">
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endfor %}
-
-        </div>
-        {% endif %}
-
-        {% if productos_academicos %}
-        <div class="main-block">
-            <div class="section-title">Producción Académica</div>
-            {% for p in productos_academicos %}
-            <div class="experience-entry keep-together">
-                <span class="role">{{ p.nombrerecurso }}</span>
-                <div class="company">{{ p.clasificador }}</div>
-                <div class="exp-desc">{{ p.descripcion }}</div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if productos_laborales %}
-        <div class="main-block">
-            <div class="section-title">Productos Laborales</div>
-            {% for p in productos_laborales %}
-            <div class="experience-entry keep-together">
-                <div class="exp-header">
-                    <span class="role">{{ p.nombreproducto }}</span>
-                    <span class="date">{{ p.fechaproducto|date:"M Y" }}</span>
-                </div>
-                <div class="exp-desc">{{ p.descripcion }}</div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if reconocimientos %}
-        <div class="main-block">
-            <div class="section-title">Reconocimientos</div>
-
-            <ul class="clean-list">
-                {% for r in reconocimientos %}
-                <li class="keep-together">
-                    <span style="font-weight: bold; color: #0f172a;">{{ r.tiporeconocimiento }}</span>
-                    — {{ r.entidadpatrocinadora }}
-                    {% if r.descripcionreconocimiento %}
-                        <br><span style="font-size: 8.5pt; color: #64748b;">{{ r.descripcionreconocimiento }}</span>
-                    {% endif %}
-
-                    {% if r.doc_pages %}
-                    <div class="annex page-break">
-                        <div class="annex-title">Anexo — Documento (Reconocimiento)</div>
-                        {% for page_url in r.doc_pages %}
-                            <img src="{{ page_url }}" class="doc-page" alt="Documento">
-                        {% endfor %}
+                <div class="col-right">
+                    <div class="item-date">
+                        {{ e.fechainiciogestion|date:"M Y" }} - 
+                        {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}Actualidad{% endif %}
                     </div>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-
-        </div>
-        {% endif %}
-
-        {% if ventas_garage %}
-        <div class="main-block">
-            <div class="section-title">Venta de Garage</div>
-
-            {% for v in ventas_garage %}
-            <div class="experience-entry keep-together">
-                <div class="exp-header">
-                    <span class="role">{{ v.nombreproducto }}</span>
-                    <span class="date">${{ v.precio }}</span>
                 </div>
-                <div class="exp-desc">{{ v.descripcion }}</div>
             </div>
-
-            {% if v.doc_pages %}
-            <div class="annex page-break">
-                <div class="annex-title">Anexo — Evidencia (Garage)</div>
-                {% for page_url in v.doc_pages %}
-                    <img src="{{ page_url }}" class="doc-page" alt="Documento">
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endfor %}
-
         </div>
-        {% endif %}
+        {% endfor %}
+    </section>
+    {% endif %}
 
-    </div>
-</div>
+    {% if cursos %}
+    <section>
+        <h2>FORMACIÓN Y CURSOS</h2>
+        {% for c in cursos %}
+        <div class="section-item">
+            <div class="row-table">
+                 <div class="col-left">
+                    <div class="item-title">{{ c.nombrecurso }}</div>
+                    <div class="item-subtitle">{{ c.entidadpatrocinadora }}</div>
+                 </div>
+                 <div class="col-right">
+                    <div class="item-date">
+                        {{ c.fechainicio|date:"M Y" }} <br> {{ c.totalhoras }} Horas
+                    </div>
+                 </div>
+            </div>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if productos_academicos %}
+    <section>
+        <h2>PRODUCTOS ACADÉMICOS</h2>
+        {% for p in productos_academicos %}
+        <div class="section-item">
+             <div class="item-title">{{ p.nombrerecurso }}</div>
+             <span class="badge">{{ p.clasificador }}</span>
+             <div class="item-desc">{{ p.descripcion }}</div>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if productos_laborales %}
+    <section>
+        <h2>PRODUCTOS LABORALES</h2>
+        {% for p in productos_laborales %}
+        <div class="section-item">
+             <div class="row-table">
+                <div class="col-left">
+                    <div class="item-title">{{ p.nombreproducto }}</div>
+                    <div class="item-desc">{{ p.descripcion }}</div>
+                </div>
+                <div class="col-right">
+                    <div class="item-date">{{ p.fechaproducto|date:"M Y" }}</div>
+                </div>
+             </div>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+     {% if reconocimientos %}
+     <section>
+         <h2>MÉRITOS Y LOGROS</h2>
+         {% for r in reconocimientos %}
+         <div class="section-item">
+             <div class="row-table">
+                <div class="col-left">
+                    <div class="item-title">{{ r.tiporeconocimiento }}</div>
+                    <div class="item-subtitle">{{ r.entidadpatrocinadora }}</div>
+                    <div class="item-desc">{{ r.descripcionreconocimiento }}</div>
+                </div>
+                <div class="col-right">
+                    <div class="item-date">{{ r.fechareconocimiento|date:"M Y" }}</div>
+                </div>
+             </div>
+         </div>
+         {% endfor %}
+     </section>
+     {% endif %}
+
+     {% if ventas_garage %}
+     <section>
+         <h2>VENTA DE GARAGE</h2>
+         {% for v in ventas_garage %}
+         <div class="section-item">
+             <div class="row-table">
+                <div class="col-left">
+                    <div class="item-title">{{ v.nombreproducto }}</div>
+                    <div class="item-subtitle">${{ v.precio }} - Estado: {{ v.estado }}</div>
+                    <div class="item-desc">{{ v.descripcion }}</div>
+                </div>
+                <div class="col-right">
+                    <div class="item-date">{{ v.fechapublicacion|date:"d M Y" }}</div>
+                </div>
+             </div>
+         </div>
+         {% endfor %}
+     </section>
+     {% endif %}
 
 </body>
 </html>
