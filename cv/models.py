@@ -5,7 +5,7 @@ import os
 import uuid
 
 # ============================================================
-# Upload helpers
+# Upload helpers (Funciones para renombrar y organizar archivos)
 # ============================================================
 
 def _upload_uuid(prefix: str, filename: str) -> str:
@@ -17,6 +17,10 @@ def upload_experiencia(instance, filename): return _upload_uuid("certificados/ex
 def upload_cursos(instance, filename): return _upload_uuid("certificados/cursos", filename)
 def upload_logros(instance, filename): return _upload_uuid("certificados/logros", filename)
 def upload_garage(instance, filename): return _upload_uuid("garage", filename)
+
+# ✅ NUEVAS FUNCIONES DE SUBIDA PARA PRODUCTOS
+def upload_prod_acad(instance, filename): return _upload_uuid("productos/academicos", filename)
+def upload_prod_lab(instance, filename): return _upload_uuid("productos/laborales", filename)
 
 
 # ============================================================
@@ -60,23 +64,13 @@ class CleanSaveMixin(models.Model):
 # ============================================================
 
 class Datospersonales(CleanSaveMixin, models.Model):
-    # ✅ Opciones de Estado Civil
     ESTADO_CIVIL_CHOICES = [
-        ('Soltero', 'Soltero'),
-        ('Casado', 'Casado'),
-        ('Viudo', 'Viudo'),
-        ('Divorciado', 'Divorciado'),
-        ('Union de hecho', 'Unión de hecho'),
+        ('Soltero', 'Soltero'), ('Casado', 'Casado'), ('Viudo', 'Viudo'),
+        ('Divorciado', 'Divorciado'), ('Union de hecho', 'Unión de hecho'),
     ]
-
-    # ✅ Opciones de Sexo
     SEXO_CHOICES = [
-        ('Masculino', 'Masculino'),
-        ('Femenino', 'Femenino'),
-        ('Prefiero no decir', 'Prefiero no decir'),
+        ('Masculino', 'Masculino'), ('Femenino', 'Femenino'), ('Prefiero no decir', 'Prefiero no decir'),
     ]
-
-    # ✅ Opciones de Licencia (Con descripción normativa)
     LICENCIA_CHOICES = [
         ('A', 'Tipo A: Motocicletas, ciclomotores, tricar y cuadrones'),
         ('B', 'Tipo B: Automóviles y camionetas (hasta 1.75 ton)'),
@@ -92,46 +86,18 @@ class Datospersonales(CleanSaveMixin, models.Model):
     ]
 
     idperfil = models.BigAutoField(primary_key=True)
-    
     nombres = models.CharField(max_length=60, blank=True, null=True)
     apellidos = models.CharField(max_length=60, blank=True, null=True)
     descripcionperfil = models.CharField(max_length=50, blank=True, null=True)
     foto_perfil_url = models.URLField(blank=True, null=True, verbose_name="Link Foto Perfil")
-
     perfilactivo = models.IntegerField(blank=True, null=True)
     nacionalidad = models.CharField(max_length=20, blank=True, null=True)
     lugarnacimiento = models.CharField(max_length=60, blank=True, null=True)
-    
     fechanacimiento = models.DateField(blank=True, null=True, validators=[validar_edad_18_100], verbose_name="Fecha Nacimiento")
     numerocedula = models.CharField(max_length=10, blank=True, null=True, validators=[validar_10_digitos], verbose_name="Cédula")
-    
-    # ✅ AHORA ES LISTA DESPLEGABLE
-    sexo = models.CharField(
-        max_length=20, 
-        choices=SEXO_CHOICES, 
-        blank=True, 
-        null=True,
-        verbose_name="Género / Sexo"
-    )
-    
-    # ✅ AHORA ES LISTA DESPLEGABLE
-    estadocivil = models.CharField(
-        max_length=50, 
-        choices=ESTADO_CIVIL_CHOICES, 
-        blank=True, 
-        null=True,
-        verbose_name="Estado Civil"
-    )
-    
-# ✅ AHORA ES LISTA DESPLEGABLE (Permite elegir el tipo exacto)
-    licenciaconducir = models.CharField(
-        max_length=50,  # <--- ¡IMPORTANTE! CÁMBIALO A 50 AQUÍ
-        choices=LICENCIA_CHOICES, 
-        blank=True, 
-        null=True,
-        verbose_name="Tipo de Licencia"
-    )
-    
+    sexo = models.CharField(max_length=20, choices=SEXO_CHOICES, blank=True, null=True, verbose_name="Género / Sexo")
+    estadocivil = models.CharField(max_length=50, choices=ESTADO_CIVIL_CHOICES, blank=True, null=True, verbose_name="Estado Civil")
+    licenciaconducir = models.CharField(max_length=50, choices=LICENCIA_CHOICES, blank=True, null=True, verbose_name="Tipo de Licencia")
     telefonoconvencional = models.CharField(max_length=15, blank=True, null=True, validators=[validar_10_digitos], verbose_name="Celular")
     telefonofijo = models.CharField(max_length=15, blank=True, null=True)
     email_contacto = models.EmailField(max_length=100, blank=True, null=True, verbose_name="Email de Contacto")
@@ -247,6 +213,11 @@ class Productosacademicos(CleanSaveMixin, models.Model):
     clasificador = models.CharField(max_length=50, choices=CLASIFICADOR_CHOICES, blank=True, null=True, verbose_name="Tipo de Producto")
     descripcion = models.CharField(max_length=100, blank=True, null=True)
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
+    
+    # ✅ NUEVOS CAMPOS PARA ARCHIVOS
+    rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
+    archivo_digital = models.FileField(upload_to=upload_prod_acad, blank=True, null=True, verbose_name="Subir PDF/Imagen")
+
     class Meta: db_table = "productosacademicos"; managed = True
 
 
@@ -258,6 +229,10 @@ class Productoslaborales(CleanSaveMixin, models.Model):
     descripcion = models.CharField(max_length=100, blank=True, null=True)
     activarparaqueseveaenfront = models.BooleanField(default=True, null=True, blank=True)
     
+    # ✅ NUEVOS CAMPOS PARA ARCHIVOS
+    rutacertificado = models.CharField(max_length=100, blank=True, null=True, verbose_name="Link Externo")
+    archivo_digital = models.FileField(upload_to=upload_prod_lab, blank=True, null=True, verbose_name="Subir PDF/Imagen")
+
     def clean(self):
         if self.fechaproducto: validar_no_futuro(self.fechaproducto)
 
