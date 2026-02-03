@@ -144,7 +144,7 @@
             <div class="text-center text-md-start">
                 <h1 class="fw-bold text-dark mb-1">{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
                 {% if perfil.descripcionperfil %}
-                    <p class="text-primary fs-5 fw-medium mb-3">{{ perfil.descripcionperfil }}</p>
+                    <p class="text-primary fs-5 fw-medium mb-3">{{ perfil.descripcionperfil|default:"" }}</p>
                 {% endif %}
                 
                 <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
@@ -272,7 +272,8 @@
         <div class="tab-content" id="pills-tabContent">
             
             <div class="tab-pane fade show active" id="pills-resumen" role="tabpanel">
-                <div class="row g-3">
+                
+                <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <div class="card border-0 shadow-sm rounded-4 h-100 bg-primary bg-opacity-10">
                             <div class="card-body text-center p-4">
@@ -300,45 +301,75 @@
                             </div>
                         </div>
                     </div>
-                    
-                    {% if productos_academicos %}
-                    <div class="col-12 mt-4">
-                        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-book-half me-2"></i>Producción Académica</h5>
-                        <div class="card border-0 shadow-sm rounded-4">
-                            <ul class="list-group list-group-flush">
-                                {% for p in productos_academicos %}
-                                <li class="list-group-item p-3">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="fw-bold">{{ p.nombrerecurso }}</div>
-                                        <span class="badge bg-secondary">{{ p.clasificador }}</span>
-                                    </div>
-                                    <small class="text-muted">{{ p.descripcion|default:"" }}</small>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if productos_laborales %}
-                    <div class="col-12 mt-4">
-                        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-briefcase-fill me-2"></i>Producción Laboral</h5>
-                        <div class="card border-0 shadow-sm rounded-4">
-                            <ul class="list-group list-group-flush">
-                                {% for p in productos_laborales %}
-                                <li class="list-group-item p-3">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="fw-bold">{{ p.nombreproducto }}</div>
-                                        <span class="badge bg-secondary">{{ p.fechaproducto|date:"Y" }}</span>
-                                    </div>
-                                    <small class="text-muted">{{ p.descripcion|default:"" }}</small>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
+
+                {% if productos_academicos %}
+                <h5 class="fw-bold text-dark mb-3 mt-2"><i class="bi bi-book-half me-2"></i>Producción Académica</h5>
+                <div class="row g-3">
+                    {% for p in productos_academicos %}
+                    <div class="col-md-6">
+                        <div class="doc-card h-100">
+                            <div class="doc-preview">
+                                {% if p.final_url %}
+                                    <a href="{{ p.final_url }}" target="_blank">
+                                        {% if p.is_pdf %}<span class="pdf-badge">PDF</span>{% endif %}
+                                        <img src="{{ p.thumbnail }}" alt="Producto Académico">
+                                    </a>
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25">
+                                        <i class="bi bi-journal-text display-4"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="p-3 d-flex flex-column flex-grow-1">
+                                <h6 class="fw-bold text-dark mb-1">{{ p.nombrerecurso }}</h6>
+                                <span class="badge bg-secondary mb-2 w-auto align-self-start">{{ p.clasificador }}</span>
+                                <div class="small text-secondary mb-3">{{ p.descripcion|default:"" }}</div>
+                                <div class="mt-auto pt-2 border-top">
+                                    {% if p.final_url %}
+                                        <a href="{{ p.final_url }}" target="_blank" class="btn btn-outline-primary btn-sm w-100 fw-bold">Ver Archivo</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if productos_laborales %}
+                <h5 class="fw-bold text-dark mb-3 mt-4"><i class="bi bi-briefcase-fill me-2"></i>Producción Laboral</h5>
+                <div class="row g-3">
+                    {% for p in productos_laborales %}
+                    <div class="col-md-6">
+                        <div class="doc-card h-100">
+                            <div class="doc-preview">
+                                {% if p.final_url %}
+                                    <a href="{{ p.final_url }}" target="_blank">
+                                        {% if p.is_pdf %}<span class="pdf-badge">PDF</span>{% endif %}
+                                        <img src="{{ p.thumbnail }}" alt="Producto Laboral">
+                                    </a>
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25">
+                                        <i class="bi bi-building-gear display-4"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="p-3 d-flex flex-column flex-grow-1">
+                                <h6 class="fw-bold text-dark mb-1">{{ p.nombreproducto }}</h6>
+                                <div class="small text-primary fw-bold mb-2">{{ p.fechaproducto|date:"d M Y" }}</div>
+                                <div class="small text-secondary mb-3">{{ p.descripcion|default:"" }}</div>
+                                <div class="mt-auto pt-2 border-top">
+                                    {% if p.final_url %}
+                                        <a href="{{ p.final_url }}" target="_blank" class="btn btn-outline-dark btn-sm w-100 fw-bold">Ver Archivo</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
 
             <div class="tab-pane fade" id="pills-exp" role="tabpanel">
@@ -358,11 +389,7 @@
                                     {{ e.fechainiciogestion|date:"M Y" }} — {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}<span class="text-success fw-bold">Actual</span>{% endif %}
                                 </div>
                             </div>
-                            
-                            {% if e.descripcionfunciones %}
-                                <p class="text-secondary small mb-3">{{ e.descripcionfunciones|default:"" }}</p>
-                            {% endif %}
-                            
+                            {% if e.descripcionfunciones %}<p class="text-secondary small mb-3">{{ e.descripcionfunciones|default:"" }}</p>{% endif %}
                             {% if e.final_url %}
                             <div class="doc-card d-inline-block" style="width: 200px;">
                                 <a href="{{ e.final_url }}" target="_blank" class="text-decoration-none">
@@ -370,9 +397,7 @@
                                         {% if e.is_pdf %}<span class="pdf-badge">PDF</span>{% endif %}
                                         <img src="{{ e.thumbnail }}" alt="Preview">
                                     </div>
-                                    <div class="p-2 text-center bg-light border-top">
-                                        <small class="fw-bold text-danger"><i class="bi bi-eye me-1"></i>Ver Certificado</small>
-                                    </div>
+                                    <div class="p-2 text-center bg-light border-top"><small class="fw-bold text-danger">Ver Certificado</small></div>
                                 </a>
                             </div>
                             {% endif %}
@@ -394,26 +419,14 @@
                                         <img src="{{ c.thumbnail }}" alt="Curso">
                                     </a>
                                 {% else %}
-                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25">
-                                        <i class="bi bi-mortarboard display-4"></i>
-                                    </div>
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25"><i class="bi bi-mortarboard display-4"></i></div>
                                 {% endif %}
                             </div>
                             <div class="p-3 d-flex flex-column flex-grow-1">
-                                <div class="mb-2">
-                                    <span class="badge bg-info text-dark border">{{ c.totalhoras }} Horas</span>
-                                    <span class="text-muted small ms-2">{{ c.fechainicio|date:"M Y" }}</span>
-                                </div>
+                                <div class="mb-2"><span class="badge bg-info text-dark border">{{ c.totalhoras }} Horas</span><span class="text-muted small ms-2">{{ c.fechainicio|date:"M Y" }}</span></div>
                                 <h6 class="fw-bold text-dark mb-1">{{ c.nombrecurso }}</h6>
                                 <div class="small text-secondary mb-3">{{ c.entidadpatrocinadora }}</div>
-                                
-                                <div class="mt-auto pt-2 border-top">
-                                    {% if c.final_url %}
-                                        <a href="{{ c.final_url }}" target="_blank" class="btn btn-outline-primary btn-sm w-100 fw-bold">Ver Certificado</a>
-                                    {% else %}
-                                        <button disabled class="btn btn-light btn-sm w-100 text-muted">Sin Archivo</button>
-                                    {% endif %}
-                                </div>
+                                <div class="mt-auto pt-2 border-top">{% if c.final_url %}<a href="{{ c.final_url }}" target="_blank" class="btn btn-outline-primary btn-sm w-100 fw-bold">Ver Certificado</a>{% else %}<button disabled class="btn btn-light btn-sm w-100 text-muted">Sin Archivo</button>{% endif %}</div>
                             </div>
                         </div>
                     </div>
@@ -421,7 +434,7 @@
                 </div>
             </div>
             
-             <div class="tab-pane fade" id="pills-rec" role="tabpanel">
+            <div class="tab-pane fade" id="pills-rec" role="tabpanel">
                 <div class="row g-3">
                     {% for r in reconocimientos %}
                     <div class="col-md-6">
@@ -433,22 +446,14 @@
                                         <img src="{{ r.thumbnail }}" alt="Logro">
                                     </a>
                                 {% else %}
-                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25">
-                                        <i class="bi bi-trophy display-4"></i>
-                                    </div>
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25"><i class="bi bi-trophy display-4"></i></div>
                                 {% endif %}
                             </div>
                             <div class="p-3 d-flex flex-column flex-grow-1">
                                 <h6 class="fw-bold text-dark mb-1">{{ r.tiporeconocimiento }}</h6>
                                 <div class="small text-primary fw-bold mb-2">{{ r.entidadpatrocinadora }}</div>
                                 <div class="small text-secondary mb-3">{{ r.descripcionreconocimiento|default:"" }}</div>
-                                
-                                <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
-                                    <span class="text-muted small">{{ r.fechareconocimiento|date:"Y" }}</span>
-                                    {% if r.final_url %}
-                                        <a href="{{ r.final_url }}" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">Ver</a>
-                                    {% endif %}
-                                </div>
+                                <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center"><span class="text-muted small">{{ r.fechareconocimiento|date:"Y" }}</span>{% if r.final_url %}<a href="{{ r.final_url }}" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">Ver</a>{% endif %}</div>
                             </div>
                         </div>
                     </div>
@@ -471,22 +476,13 @@
                                 {% elif v.imagen %}
                                     <img src="{{ v.imagen }}" alt="Garage">
                                 {% else %}
-                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25">
-                                        <i class="bi bi-shop display-4"></i>
-                                    </div>
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25"><i class="bi bi-shop display-4"></i></div>
                                 {% endif %}
                             </div>
                             <div class="p-3">
-                                <div class="d-flex justify-content-between">
-                                    <h5 class="fw-bold">{{ v.nombreproducto }}</h5>
-                                    <span class="text-success fw-bold">${{ v.precio }}</span>
-                                </div>
+                                <div class="d-flex justify-content-between"><h5 class="fw-bold">{{ v.nombreproducto }}</h5><span class="text-success fw-bold">${{ v.precio }}</span></div>
                                 <p class="small text-muted mb-3">{{ v.descripcion|default:"" }}</p>
-                                <div class="mt-auto">
-                                    {% if v.archivo_digital %}
-                                        <a href="{{ v.archivo_digital.url }}" target="_blank" class="btn btn-dark btn-sm w-100">Ver Detalles/Foto</a>
-                                    {% endif %}
-                                </div>
+                                <div class="mt-auto">{% if v.archivo_digital %}<a href="{{ v.archivo_digital.url }}" target="_blank" class="btn btn-dark btn-sm w-100">Ver Detalles/Foto</a>{% endif %}</div>
                             </div>
                         </div>
                     </div>
@@ -501,10 +497,7 @@
 <div class="modal fade" id="configPDFModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">Personalizar PDF</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-header"><h5 class="modal-title fw-bold">Personalizar PDF</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <form action="{% url 'cv_print' perfil.idperfil %}" method="GET" target="_blank">
                 <input type="hidden" name="from_modal" value="true">
                 <div class="modal-body">
@@ -518,9 +511,7 @@
                         <div class="form-check p-2 border rounded bg-light"><input class="form-check-input ms-1" type="checkbox" name="garage" id="c6"><label class="form-check-label fw-bold ms-2 w-100" for="c6">Garage</label></div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary w-100">Generar PDF</button>
-                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-primary w-100">Generar PDF</button></div>
             </form>
         </div>
     </div>
