@@ -8,518 +8,976 @@
 
 <style>
     :root {
-        --ink-900: #0f172a;
-        --ink-700: #334155;
-        --ink-500: #64748b;
-        --sky-600: #0284c7;
-        --indigo-600: #4f46e5;
-        --emerald-600: #059669;
-        --amber-600: #d97706;
-        --rose-600: #e11d48;
-        --slate-50: #f8fafc;
-        --slate-100: #f1f5f9;
-        --slate-200: #e2e8f0;
-        --radius-xl: 18px;
-        --radius-lg: 14px;
-        --radius-md: 12px;
+        --dark-navy: #0a1428;
+        --deep-purple: #5a189a;
+        --vibrant-pink: #e91e63;
+        --electric-blue: #00d4ff;
+        --neon-green: #39ff14;
+        --warm-orange: #ff6b35;
+        --soft-gray: #f5f7fa;
+        --card-bg: #ffffff;
+        --text-dark: #1a1a2e;
+        --text-light: #6c757d;
+        --accent-1: #7c3aed;
+        --accent-2: #06b6d4;
+        --accent-3: #f59e0b;
     }
 
-    /* Header tipo "cover" con organización en 3 columnas */
-    .profile-header {
-        background: radial-gradient(1200px 600px at -10% -30%, rgba(79,70,229,0.12), transparent),
-                    radial-gradient(900px 500px at 120% -20%, rgba(2,132,199,0.12), transparent),
-                    #fff;
-        border: 1px solid var(--slate-200);
-        border-radius: var(--radius-xl);
-        padding: 2rem;
-        margin-bottom: 2rem;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: linear-gradient(135deg, #f5f7fa 0%, #e8eef7 100%); }
+
+    /* Hero Section - Diseño completamente nuevo */
+    .hero-wrapper {
+        background: linear-gradient(135deg, var(--deep-purple) 0%, var(--accent-1) 50%, var(--accent-2) 100%);
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(90, 24, 154, 0.2);
+    }
+
+    .hero-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
+        border-radius: 50%;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    @media (max-width: 768px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+            text-align: center;
+        }
+    }
+
+    .avatar-container {
+        position: relative;
+    }
+
+    .avatar-wrapper {
+        width: 140px;
+        height: 140px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 4px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
         overflow: hidden;
     }
-    .avatar-ring {
-        width: 170px;
-        height: 170px;
-        border-radius: 22px;
-        background: linear-gradient(135deg, rgba(79,70,229,0.2), rgba(2,132,199,0.2));
-        padding: 6px;
-        box-shadow: 0 20px 60px rgba(15,23,42,0.08);
-    }
-    .avatar-inner {
-        border-radius: 16px;
-        overflow: hidden;
+
+    .avatar-wrapper img {
         width: 100%;
         height: 100%;
-        background: var(--slate-100);
-    }
-    .avatar-inner img { width: 100%; height: 100%; object-fit: cover; }
-
-    .tag {
-        display: inline-flex;
-        align-items: center;
-        gap: .5rem;
-        padding: .4rem .8rem;
-        background: var(--slate-100);
-        border: 1px solid var(--slate-200);
-        color: var(--ink-700);
-        border-radius: 999px;
-        font-weight: 600;
-        font-size: .85rem;
-        margin: .25rem .25rem .25rem 0;
+        object-fit: cover;
+        border-radius: 16px;
     }
 
-    .action-stack .btn {
-        border-radius: 999px;
-        font-weight: 700;
-    }
-
-    .mini-stat {
-        background: linear-gradient(180deg, var(--slate-50), #fff);
-        border: 1px solid var(--slate-200);
-        border-radius: var(--radius-lg);
-        padding: 1.25rem;
+    .avatar-initials {
+        width: 100%;
         height: 100%;
-    }
-    .mini-stat i { opacity: .8; }
-
-    /* Contenedor principal en dos columnas con tabs verticales a la derecha */
-    .layout {
-        display: grid;
-        grid-template-columns: 340px 1fr;
-        gap: 1.5rem;
-    }
-    @media (max-width: 991.98px) {
-        .layout { grid-template-columns: 1fr; }
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+        color: white;
+        font-weight: 900;
+        font-size: 2.5rem;
+        border-radius: 16px;
     }
 
-    .card-soft {
-        background: #fff;
-        border: 1px solid var(--slate-200);
-        border-radius: var(--radius-lg);
-        box-shadow: 0 10px 30px rgba(15,23,42,0.05);
+    .profile-info {
+        color: white;
     }
-    .card-soft .card-header { background: transparent; border-bottom: 1px dashed var(--slate-200); }
 
-    .list-plain { list-style: none; padding: 0; margin: 0; }
-    .list-plain li { display: flex; justify-content: space-between; gap: 1rem; padding: .25rem 0; }
+    .profile-info h1 {
+        font-size: 2.5rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
 
-    /* Nav vertical tipo secciones */
-    .vnav .nav-link {
+    .profile-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        opacity: 0.95;
+        margin-bottom: 1rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .action-buttons {
+            justify-content: center;
+        }
+    }
+
+    .btn-custom {
+        padding: 0.6rem 1.2rem;
         border-radius: 12px;
-        margin-bottom: .35rem;
-        text-align: left;
         font-weight: 700;
-        border: 1px solid var(--slate-200);
-        color: var(--ink-700);
-        background: linear-gradient(#fff, var(--slate-50));
-    }
-    .vnav .nav-link.active {
-        color: #fff;
-        border-color: transparent;
-        background: linear-gradient(135deg, var(--indigo-600), var(--sky-600));
-        box-shadow: 0 8px 30px rgba(79,70,229,.35);
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
     }
 
-    /* Tarjetas de documento/imagen en estilo tile */
+    .btn-primary-custom {
+        background: white;
+        color: var(--deep-purple);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-secondary-custom {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid white;
+    }
+
+    .btn-secondary-custom:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Stats Cards */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 1.2rem;
+        text-align: center;
+        color: white;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 900;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        margin-top: 0.5rem;
+        font-weight: 600;
+    }
+
+    /* Main Layout */
+    .main-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    @media (max-width: 1024px) {
+        .main-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Sidebar Cards */
+    .sidebar-card {
+        background: var(--card-bg);
+        border-radius: 18px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid #f0f0f0;
+    }
+
+    .sidebar-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1.2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--soft-gray);
+    }
+
+    .sidebar-card-header i {
+        font-size: 1.3rem;
+    }
+
+    .sidebar-card-header h6 {
+        font-weight: 800;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0;
+    }
+
+    .info-item {
+        margin-bottom: 1rem;
+    }
+
+    .info-label {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.3rem;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        color: var(--text-dark);
+        font-weight: 600;
+    }
+
+    .info-value a {
+        color: var(--accent-1);
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .info-value a:hover {
+        text-decoration: underline;
+    }
+
+    /* Content Area */
+    .content-wrapper {
+        background: var(--card-bg);
+        border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .nav-tabs-custom {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1.5rem;
+        border-bottom: 2px solid var(--soft-gray);
+        background: linear-gradient(to right, #fafbfc, #f5f7fa);
+        flex-wrap: wrap;
+    }
+
+    .nav-tab-item {
+        padding: 0.7rem 1.2rem;
+        border: none;
+        background: transparent;
+        color: var(--text-light);
+        font-weight: 700;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .nav-tab-item:hover {
+        background: var(--soft-gray);
+        color: var(--accent-1);
+    }
+
+    .nav-tab-item.active {
+        background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+        color: white;
+        box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+    }
+
+    .tab-content-wrapper {
+        padding: 2rem;
+    }
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Section Titles */
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        font-weight: 900;
+        color: var(--text-dark);
+    }
+
+    .section-title i {
+        font-size: 1.5rem;
+        background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Tiles Grid */
+    .tiles-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
     .tile {
+        background: var(--card-bg);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
         display: flex;
         flex-direction: column;
-        border-radius: 16px;
-        border: 1px solid var(--slate-200);
-        overflow: hidden;
-        background: #fff;
         height: 100%;
-        transition: transform .2s ease, box-shadow .2s ease;
     }
-    .tile:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(15,23,42,.08); }
-    .tile-media { height: 180px; background: var(--slate-100); position: relative; }
-    .tile-media img { width: 100%; height: 100%; object-fit: cover; }
-    .badge-pdf {
-        position: absolute; top: .6rem; right: .6rem;
-        background: var(--rose-600); color: #fff; font-weight: 800;
-        font-size: .7rem; border-radius: 999px; padding: .25rem .5rem;
-        box-shadow: 0 4px 10px rgba(225,29,72,.25);
-    }
-    .tile-body { padding: 1rem; display: flex; flex-direction: column; gap: .35rem; height: 100%; }
 
-    /* Experiencia: tarjeta con acento lateral */
-    .exp-card {
+    .tile:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+        border-color: var(--accent-1);
+    }
+
+    .tile-image {
+        width: 100%;
+        height: 160px;
+        background: linear-gradient(135deg, var(--soft-gray), #e8eef7);
         position: relative;
-        border-left: 6px solid var(--indigo-600);
-        border-radius: 12px;
-        padding: 1rem 1rem 1rem 1.25rem;
-        border: 1px solid var(--slate-200);
-        background: #fff;
+        overflow: hidden;
     }
 
-    .price-badge { color: var(--emerald-600); font-weight: 900; }
+    .tile-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .tile-badge {
+        position: absolute;
+        top: 0.8rem;
+        right: 0.8rem;
+        background: var(--vibrant-pink);
+        color: white;
+        padding: 0.3rem 0.7rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 900;
+        box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
+    }
+
+    .tile-body {
+        padding: 1.2rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .tile-title {
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .tile-meta {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        margin-bottom: 0.8rem;
+    }
+
+    .tile-description {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin-bottom: 1rem;
+        flex-grow: 1;
+    }
+
+    .tile-footer {
+        border-top: 1px solid var(--soft-gray);
+        padding-top: 0.8rem;
+        margin-top: auto;
+    }
+
+    .tile-btn {
+        width: 100%;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+    .tile-btn-primary {
+        background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+        color: white;
+    }
+
+    .tile-btn-primary:hover {
+        box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+    }
+
+    .tile-btn-secondary {
+        background: var(--soft-gray);
+        color: var(--text-dark);
+    }
+
+    .tile-btn-secondary:hover {
+        background: #e8eef7;
+    }
+
+    /* Experience Cards */
+    .exp-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .exp-item {
+        position: relative;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #fafbfc, #f5f7fa);
+        border-radius: 14px;
+        border-left: 4px solid var(--accent-1);
+        transition: all 0.3s ease;
+    }
+
+    .exp-item:hover {
+        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.1);
+        transform: translateX(4px);
+    }
+
+    .exp-dot {
+        position: absolute;
+        left: -2.5rem;
+        top: 1.8rem;
+        width: 1.2rem;
+        height: 1.2rem;
+        background: white;
+        border: 3px solid var(--accent-1);
+        border-radius: 50%;
+        box-shadow: 0 0 0 4px var(--soft-gray);
+    }
+
+    .exp-title {
+        font-weight: 900;
+        color: var(--accent-1);
+        margin-bottom: 0.3rem;
+        font-size: 1.1rem;
+    }
+
+    .exp-company {
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .exp-date {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin-bottom: 0.8rem;
+    }
+
+    .exp-description {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        line-height: 1.5;
+    }
+
+    /* Badge */
+    .badge-custom {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .badge-info {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(124, 58, 237, 0.2));
+        color: var(--accent-2);
+    }
+
+    .badge-success {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.2));
+        color: #22c55e;
+    }
+
+    /* Admin Link */
+    .admin-link {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .admin-link a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.2rem;
+        background: var(--soft-gray);
+        color: var(--text-light);
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+    }
+
+    .admin-link a:hover {
+        background: var(--accent-1);
+        color: white;
+    }
+
+    /* Modal */
+    .modal-content {
+        border-radius: 18px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+        color: white;
+        border: none;
+        border-radius: 18px 18px 0 0;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .form-check {
+        padding: 1rem;
+        border-radius: 12px;
+        background: var(--soft-gray);
+        margin-bottom: 0.8rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-check:hover {
+        background: #e8eef7;
+    }
+
+    .form-check-input {
+        border-radius: 6px;
+        width: 1.2rem;
+        height: 1.2rem;
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+        border-color: var(--accent-1);
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .modal-footer .btn {
+        border-radius: 12px;
+        font-weight: 700;
+        padding: 0.7rem 1.5rem;
+    }
+
+    .modal-footer .btn-primary {
+        background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+        border: none;
+    }
+
+    .modal-footer .btn-primary:hover {
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+    }
 </style>
 
-<!-- Encabezado de perfil completamente re-diseñado -->
-<section class="profile-header">
-    <div class="row align-items-center g-4">
-        <div class="col-12 col-md-auto text-center text-md-start">
-            <div class="avatar-ring mx-auto mx-md-0">
-                <div class="avatar-inner">
+<!-- Hero Section Rediseñado -->
+<div class="hero-wrapper">
+    <div class="hero-content">
+        <div class="profile-grid">
+            <!-- Avatar -->
+            <div class="avatar-container">
+                <div class="avatar-wrapper">
                     {% if perfil.foto_perfil_url %}
                         <img src="{{ perfil.foto_perfil_url }}" alt="Foto de Perfil">
                     {% else %}
-                        <div class="w-100 h-100 d-flex align-items-center justify-content-center text-white" style="background: linear-gradient(135deg, var(--indigo-600), var(--sky-600)); font-weight: 800; font-size: 3rem;">
+                        <div class="avatar-initials">
                             {{ perfil.nombres|slice:":1" }}{{ perfil.apellidos|slice:":1" }}
                         </div>
                     {% endif %}
                 </div>
             </div>
-        </div>
-        <div class="col">
-            <div class="d-flex flex-column gap-1 text-center text-md-start">
-                <h1 class="fw-black m-0" style="color:var(--ink-900)">{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
+
+            <!-- Información Principal -->
+            <div class="profile-info">
+                <h1>{{ perfil.nombres }} {{ perfil.apellidos }}</h1>
                 {% if perfil.descripcionperfil %}
-                    <div class="fw-bold" style="color:var(--indigo-600)">{{ perfil.descripcionperfil|default:"" }}</div>
+                    <div class="profile-title">{{ perfil.descripcionperfil|default:"" }}</div>
                 {% endif %}
-                <div class="pt-2">
-                    <span class="tag"><i class="bi bi-person-vcard"></i>{{ perfil.numerocedula }}</span>
-                    {% if perfil.nacionalidad %}<span class="tag"><i class="bi bi-flag"></i>{{ perfil.nacionalidad }}</span>{% endif %}
-                    {% if perfil.lugarnacimiento %}<span class="tag"><i class="bi bi-geo-alt"></i>{{ perfil.lugarnacimiento }}</span>{% endif %}
-                    {% if perfil.licenciaconducir %}
-                        <span class="tag" style="background:#fff;border-color:#fde68a;color:#92400e"><i class="bi bi-car-front-fill"></i>Licencia: {{ perfil.licenciaconducir }}</span>
-                    {% endif %}
-                </div>
             </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="action-stack d-grid gap-2">
-                <button type="button" class="btn btn-outline-dark btn-sm py-2" data-bs-toggle="modal" data-bs-target="#configPDFModal">
-                    <i class="bi bi-sliders me-1"></i> Personalizar PDF
+
+            <!-- Botones de Acción -->
+            <div class="action-buttons">
+                <button type="button" class="btn-custom btn-primary-custom" data-bs-toggle="modal" data-bs-target="#configPDFModal">
+                    <i class="bi bi-sliders me-1"></i> Personalizar
                 </button>
-                <a href="{% url 'cv_print' perfil.idperfil %}" target="_blank" class="btn btn-primary btn-sm py-2 fw-bold" style="background: linear-gradient(135deg, var(--indigo-600), var(--sky-600)); border: none;">
+                <a href="{% url 'cv_print' perfil.idperfil %}" target="_blank" class="btn-custom btn-primary-custom">
                     <i class="bi bi-file-earmark-pdf-fill me-1"></i> Descargar CV
                 </a>
             </div>
         </div>
-    </div>
 
-    <div class="row g-3 mt-3">
-        <div class="col-12 col-md-4">
-            <div class="mini-stat d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-briefcase fs-2 text-primary"></i>
-                    <div>
-                        <div class="fw-black fs-4 text-dark">{{ experiencias|length }}</div>
-                        <div class="text-muted small fw-bold">Experiencias</div>
-                    </div>
-                </div>
+        <!-- Stats -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <span class="stat-number">{{ experiencias|length }}</span>
+                <span class="stat-label">Experiencias</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">{{ cursos|length }}</span>
+                <span class="stat-label">Cursos</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">{{ reconocimientos|length }}</span>
+                <span class="stat-label">Logros</span>
             </div>
         </div>
-        <div class="col-12 col-md-4">
-            <div class="mini-stat d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-mortarboard fs-2 text-success"></i>
-                    <div>
-                        <div class="fw-black fs-4 text-dark">{{ cursos|length }}</div>
-                        <div class="text-muted small fw-bold">Cursos</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="mini-stat d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-trophy fs-2" style="color: var(--amber-600)"></i>
-                    <div>
-                        <div class="fw-black fs-4 text-dark">{{ reconocimientos|length }}</div>
-                        <div class="text-muted small fw-bold">Logros</div>
-                    </div>
-                </div>
-            </div>
+
+        <!-- Tags de Información -->
+        <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.8rem;">
+            <span class="badge-custom badge-info"><i class="bi bi-person-vcard me-1"></i>{{ perfil.numerocedula }}</span>
+            {% if perfil.nacionalidad %}<span class="badge-custom badge-info"><i class="bi bi-flag me-1"></i>{{ perfil.nacionalidad }}</span>{% endif %}
+            {% if perfil.lugarnacimiento %}<span class="badge-custom badge-info"><i class="bi bi-geo-alt me-1"></i>{{ perfil.lugarnacimiento }}</span>{% endif %}
+            {% if perfil.licenciaconducir %}<span class="badge-custom badge-success"><i class="bi bi-car-front-fill me-1"></i>Licencia: {{ perfil.licenciaconducir }}</span>{% endif %}
         </div>
     </div>
-</section>
+</div>
 
-<div class="layout">
-    <!-- Columna izquierda: información personal -->
-    <aside class="d-flex flex-column gap-3">
-        <div class="card-soft">
-            <div class="card-header px-4 pt-4 pb-2">
-                <h6 class="fw-bold text-uppercase text-muted small"><i class="bi bi-chat-left-dots-fill text-primary me-2"></i>Contacto</h6>
+<!-- Main Content -->
+<div class="main-container">
+    <!-- Sidebar -->
+    <aside>
+        <!-- Contacto -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <i class="bi bi-telephone-fill" style="color: var(--accent-2);"></i>
+                <h6>Contacto</h6>
             </div>
-            <div class="card-body px-4 pb-4">
-                {% if perfil.telefonoconvencional %}
-                    <div class="mb-3">
-                        <label class="small text-muted fw-bold">Móvil / WhatsApp</label>
-                        <div class="fs-6 text-dark">{{ perfil.telefonoconvencional }}</div>
-                    </div>
-                {% endif %}
-                {% if perfil.telefonofijo %}
-                    <div class="mb-3">
-                        <label class="small text-muted fw-bold">Teléfono Fijo</label>
-                        <div class="fs-6 text-dark">{{ perfil.telefonofijo }}</div>
-                    </div>
-                {% endif %}
-                {% if perfil.sitioweb %}
-                    <div>
-                        <label class="small text-muted fw-bold">Sitio Web / Portafolio</label>
-                        <div class="text-truncate"><a href="{{ perfil.sitioweb }}" target="_blank" class="text-decoration-none fw-semibold">{{ perfil.sitioweb }}</a></div>
-                    </div>
-                {% endif %}
-            </div>
+            {% if perfil.telefonoconvencional %}
+                <div class="info-item">
+                    <div class="info-label">Móvil / WhatsApp</div>
+                    <div class="info-value">{{ perfil.telefonoconvencional }}</div>
+                </div>
+            {% endif %}
+            {% if perfil.telefonofijo %}
+                <div class="info-item">
+                    <div class="info-label">Teléfono Fijo</div>
+                    <div class="info-value">{{ perfil.telefonofijo }}</div>
+                </div>
+            {% endif %}
+            {% if perfil.sitioweb %}
+                <div class="info-item">
+                    <div class="info-label">Sitio Web / Portafolio</div>
+                    <div class="info-value"><a href="{{ perfil.sitioweb }}" target="_blank">{{ perfil.sitioweb }}</a></div>
+                </div>
+            {% endif %}
         </div>
 
-        <div class="card-soft">
-            <div class="card-header px-4 pt-4 pb-2">
-                <h6 class="fw-bold text-uppercase text-muted small"><i class="bi bi-person-lines-fill text-success me-2"></i>Detalles</h6>
+        <!-- Detalles Personales -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <i class="bi bi-person-check-fill" style="color: var(--accent-1);"></i>
+                <h6>Detalles Personales</h6>
             </div>
-            <div class="card-body px-4 pb-4">
-                <ul class="list-plain">
-                    <li><span class="text-muted">Nacimiento</span><span class="fw-semibold">{% if perfil.fechanacimiento %}{{ perfil.fechanacimiento|date:"d M Y" }}{% else %}—{% endif %}</span></li>
-                    <li><span class="text-muted">Estado Civil</span><span class="fw-semibold">{{ perfil.estadocivil|default:"—" }}</span></li>
-                    {% if perfil.sexo %}
-                    <li><span class="text-muted">Género</span><span class="fw-semibold">{% if perfil.sexo == 'M' %}Masculino{% elif perfil.sexo == 'F' %}Femenino{% else %}{{ perfil.sexo }}{% endif %}</span></li>
-                    {% endif %}
-                </ul>
+            <div class="info-item">
+                <div class="info-label">Fecha de Nacimiento</div>
+                <div class="info-value">{% if perfil.fechanacimiento %}{{ perfil.fechanacimiento|date:"d M Y" }}{% else %}—{% endif %}</div>
             </div>
+            <div class="info-item">
+                <div class="info-label">Estado Civil</div>
+                <div class="info-value">{{ perfil.estadocivil|default:"—" }}</div>
+            </div>
+            {% if perfil.sexo %}
+            <div class="info-item">
+                <div class="info-label">Género</div>
+                <div class="info-value">{% if perfil.sexo == 'M' %}Masculino{% elif perfil.sexo == 'F' %}Femenino{% else %}{{ perfil.sexo }}{% endif %}</div>
+            </div>
+            {% endif %}
         </div>
 
-        <div class="card-soft">
-            <div class="card-header px-4 pt-4 pb-2">
-                <h6 class="fw-bold text-uppercase text-muted small"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Ubicación</h6>
+        <!-- Ubicación -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <i class="bi bi-geo-alt-fill" style="color: var(--warm-orange);"></i>
+                <h6>Ubicación</h6>
             </div>
-            <div class="card-body px-4 pb-4">
-                <div class="mb-2"><i class="bi bi-house-door text-muted me-2"></i>{{ perfil.direcciondomiciliaria|default:"Domicilio no registrado" }}</div>
-                {% if perfil.direcciontrabajo %}
-                <div><i class="bi bi-building text-muted me-2"></i>{{ perfil.direcciontrabajo }}</div>
-                {% endif %}
+            <div class="info-item">
+                <div class="info-label">Domicilio</div>
+                <div class="info-value">{{ perfil.direcciondomiciliaria|default:"No registrado" }}</div>
             </div>
+            {% if perfil.direcciontrabajo %}
+            <div class="info-item">
+                <div class="info-label">Trabajo</div>
+                <div class="info-value">{{ perfil.direcciontrabajo }}</div>
+            </div>
+            {% endif %}
         </div>
 
-        <div class="text-center">
-            <a class="btn btn-sm btn-link text-muted" href="/admin/"><i class="bi bi-gear-fill me-1"></i>Administrar Datos</a>
+        <div class="admin-link">
+            <a href="/admin/"><i class="bi bi-gear-fill"></i> Administrar Datos</a>
         </div>
     </aside>
 
-    <!-- Columna derecha: navegación vertical + contenido -->
-    <section class="d-grid gap-3">
-        <div class="card-soft p-2">
-            <div class="row g-3">
-                <div class="col-12 col-md-3">
-                    <div class="nav flex-md-column nav-pills vnav" id="pills-tab" role="tablist" aria-orientation="vertical">
-                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-resumen" type="button">Resumen</button>
-                        {% if experiencias %}<button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-exp" type="button">Experiencia</button>{% endif %}
-                        {% if cursos %}<button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-cursos" type="button">Formación</button>{% endif %}
-                        {% if reconocimientos %}<button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-rec" type="button">Logros</button>{% endif %}
-                        {% if ventas_garage %}<button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-garage" type="button">Garage</button>{% endif %}
-                    </div>
+    <!-- Content Area -->
+    <div class="content-wrapper">
+        <!-- Tabs Navigation -->
+        <div class="nav-tabs-custom">
+            <button class="nav-tab-item active" onclick="switchTab(event, 'pills-resumen')">Resumen</button>
+            {% if experiencias %}<button class="nav-tab-item" onclick="switchTab(event, 'pills-exp')">Experiencia</button>{% endif %}
+            {% if cursos %}<button class="nav-tab-item" onclick="switchTab(event, 'pills-cursos')">Formación</button>{% endif %}
+            {% if reconocimientos %}<button class="nav-tab-item" onclick="switchTab(event, 'pills-rec')">Logros</button>{% endif %}
+            {% if ventas_garage %}<button class="nav-tab-item" onclick="switchTab(event, 'pills-garage')">Garage</button>{% endif %}
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content-wrapper">
+            <!-- Resumen -->
+            <div id="pills-resumen" class="tab-pane active">
+                {% if productos_academicos %}
+                <div class="section-title">
+                    <i class="bi bi-book-half"></i>
+                    Producción Académica
                 </div>
-                <div class="col-12 col-md-9">
-                    <div class="tab-content" id="pills-tabContent">
-                        <!-- Resumen -->
-                        <div class="tab-pane fade show active" id="pills-resumen" role="tabpanel">
-                            {% if productos_academicos %}
-                            <div class="mb-3 d-flex align-items-center gap-2"><i class="bi bi-book-half text-primary"></i><h5 class="fw-bold m-0">Producción Académica</h5></div>
-                            <div class="row g-3">
-                                {% for p in productos_academicos %}
-                                <div class="col-12 col-md-6">
-                                    <div class="tile h-100">
-                                        <div class="tile-media">
-                                            {% if p.final_url %}
-                                                <a href="{{ p.final_url }}" target="_blank">
-                                                    {% if p.is_pdf %}<span class="badge-pdf">PDF</span>{% endif %}
-                                                    <img src="{{ p.thumbnail }}" alt="Producto Académico">
-                                                </a>
-                                            {% else %}
-                                                <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25">
-                                                    <i class="bi bi-journal-text display-4"></i>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="tile-body">
-                                            <h6 class="fw-bold text-dark m-0">{{ p.nombrerecurso }}</h6>
-                                            <span class="badge bg-secondary align-self-start">{{ p.clasificador }}</span>
-                                            <div class="small text-secondary">{{ p.descripcion|default:"" }}</div>
-                                            <div class="mt-auto pt-2 border-top">
-                                                {% if p.final_url %}<a href="{{ p.final_url }}" target="_blank" class="btn btn-outline-primary btn-sm w-100 fw-bold">Ver Archivo</a>{% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
+                <div class="tiles-grid">
+                    {% for p in productos_academicos %}
+                    <div class="tile">
+                        <div class="tile-image">
+                            {% if p.final_url %}
+                                <a href="{{ p.final_url }}" target="_blank">
+                                    {% if p.is_pdf %}<span class="tile-badge">PDF</span>{% endif %}
+                                    <img src="{{ p.thumbnail }}" alt="Producto Académico">
+                                </a>
+                            {% else %}
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light); opacity: 0.3;">
+                                    <i class="bi bi-journal-text" style="font-size: 3rem;"></i>
                                 </div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-
-                            {% if productos_laborales %}
-                            <div class="mt-4 mb-3 d-flex align-items-center gap-2"><i class="bi bi-briefcase-fill text-dark"></i><h5 class="fw-bold m-0">Producción Laboral</h5></div>
-                            <div class="row g-3">
-                                {% for p in productos_laborales %}
-                                <div class="col-12 col-md-6">
-                                    <div class="tile h-100">
-                                        <div class="tile-media">
-                                            {% if p.final_url %}
-                                                <a href="{{ p.final_url }}" target="_blank">
-                                                    {% if p.is_pdf %}<span class="badge-pdf">PDF</span>{% endif %}
-                                                    <img src="{{ p.thumbnail }}" alt="Producto Laboral">
-                                                </a>
-                                            {% else %}
-                                                <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25">
-                                                    <i class="bi bi-building-gear display-4"></i>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="tile-body">
-                                            <h6 class="fw-bold text-dark m-0">{{ p.nombreproducto }}</h6>
-                                            <div class="small text-primary fw-bold">{{ p.fechaproducto|date:"d M Y" }}</div>
-                                            <div class="small text-secondary">{{ p.descripcion|default:"" }}</div>
-                                            <div class="mt-auto pt-2 border-top">
-                                                {% if p.final_url %}<a href="{{ p.final_url }}" target="_blank" class="btn btn-outline-dark btn-sm w-100 fw-bold">Ver Archivo</a>{% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
                             {% endif %}
                         </div>
-
-                        <!-- Experiencia -->
-                        <div class="tab-pane fade" id="pills-exp" role="tabpanel">
-                            <div class="card-soft p-3">
-                                <h4 class="fw-bold mb-3">Trayectoria Profesional</h4>
-                                <div class="d-flex flex-column gap-3">
-                                    {% for e in experiencias %}
-                                    <div class="exp-card">
-                                        <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
-                                            <div>
-                                                <h5 class="fw-bold text-primary m-0">{{ e.cargodesempenado }}</h5>
-                                                <div class="fw-semibold text-dark">{{ e.nombrempresa }}</div>
-                                            </div>
-                                            <div class="text-md-end text-muted small">
-                                                <i class="bi bi-calendar-event me-1"></i>
-                                                {{ e.fechainiciogestion|date:"M Y" }} — {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}<span class="text-success fw-bold">Actual</span>{% endif %}
-                                            </div>
-                                        </div>
-                                        {% if e.descripcionfunciones %}
-                                            <p class="text-secondary small mt-2 mb-2">{{ e.descripcionfunciones|default:"" }}</p>
-                                        {% endif %}
-                                        {% if e.final_url %}
-                                            <div class="mt-2" style="max-width:220px;">
-                                                <a href="{{ e.final_url }}" target="_blank" class="text-decoration-none">
-                                                    <div class="tile-media" style="height:120px; border-radius:12px; overflow:hidden;">
-                                                        {% if e.is_pdf %}<span class="badge-pdf">PDF</span>{% endif %}
-                                                        <img src="{{ e.thumbnail }}" alt="Preview">
-                                                    </div>
-                                                    <div class="text-center small fw-bold text-danger mt-1">Ver Certificado</div>
-                                                </a>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Cursos / Formación -->
-                        <div class="tab-pane fade" id="pills-cursos" role="tabpanel">
-                            <div class="row g-3">
-                                {% for c in cursos %}
-                                <div class="col-12 col-md-6">
-                                    <div class="tile h-100">
-                                        <div class="tile-media">
-                                            {% if c.final_url %}
-                                                <a href="{{ c.final_url }}" target="_blank">
-                                                    {% if c.is_pdf %}<span class="badge-pdf">PDF</span>{% endif %}
-                                                    <img src="{{ c.thumbnail }}" alt="Curso">
-                                                </a>
-                                            {% else %}
-                                                <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25"><i class="bi bi-mortarboard display-4"></i></div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="tile-body">
-                                            <div class="mb-1">
-                                                <span class="badge bg-info text-dark">{{ c.totalhoras }} Horas</span>
-                                                <span class="text-muted small ms-2">{{ c.fechainicio|date:"M Y" }}</span>
-                                            </div>
-                                            <h6 class="fw-bold text-dark m-0">{{ c.nombrecurso }}</h6>
-                                            <div class="small text-secondary">{{ c.entidadpatrocinadora }}</div>
-                                            <div class="mt-auto pt-2 border-top">
-                                                {% if c.final_url %}
-                                                    <a href="{{ c.final_url }}" target="_blank" class="btn btn-outline-primary btn-sm w-100 fw-bold">Ver Certificado</a>
-                                                {% else %}
-                                                    <button disabled class="btn btn-light btn-sm w-100 text-muted">Sin Archivo</button>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <!-- Reconocimientos / Logros -->
-                        <div class="tab-pane fade" id="pills-rec" role="tabpanel">
-                            <div class="row g-3">
-                                {% for r in reconocimientos %}
-                                <div class="col-12 col-md-6">
-                                    <div class="tile h-100">
-                                        <div class="tile-media">
-                                            {% if r.final_url %}
-                                                <a href="{{ r.final_url }}" target="_blank">
-                                                    {% if r.is_pdf %}<span class="badge-pdf">PDF</span>{% endif %}
-                                                    <img src="{{ r.thumbnail }}" alt="Logro">
-                                                </a>
-                                            {% else %}
-                                                <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25"><i class="bi bi-trophy display-4"></i></div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="tile-body">
-                                            <h6 class="fw-bold text-dark m-0">{{ r.tiporeconocimiento }}</h6>
-                                            <div class="small text-primary fw-bold">{{ r.entidadpatrocinadora }}</div>
-                                            <div class="small text-secondary">{{ r.descripcionreconocimiento|default:"" }}</div>
-                                            <div class="mt-auto pt-2 border-top d-flex align-items-center justify-content-between">
-                                                <span class="text-muted small">{{ r.fechareconocimiento|date:"Y" }}</span>
-                                                {% if r.final_url %}<a href="{{ r.final_url }}" target="_blank" class="btn btn-outline-danger btn-sm fw-bold">Ver</a>{% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <!-- Garage -->
-                        <div class="tab-pane fade" id="pills-garage" role="tabpanel">
-                            <div class="row g-3">
-                                {% for v in ventas_garage %}
-                                <div class="col-12 col-md-6">
-                                    <div class="tile h-100">
-                                        <div class="tile-media position-relative">
-                                            <span class="position-absolute top-0 start-0 m-2 badge bg-white shadow-sm {% if v.estado == 'Bueno' %}text-success{% else %}text-warning{% endif %}">{{ v.estado }}</span>
-                                            {% if v.final_url %}
-                                                <a href="{{ v.final_url }}" target="_blank"><img src="{{ v.thumbnail }}" alt="Garage"></a>
-                                            {% elif v.imagen %}
-                                                <img src="{{ v.imagen }}" alt="Garage">
-                                            {% else %}
-                                                <div class="d-flex align-items-center justify-content-center h-100 text-muted opacity-25"><i class="bi bi-shop display-4"></i></div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="tile-body">
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <h5 class="fw-bold m-0">{{ v.nombreproducto }}</h5>
-                                                <span class="price-badge">${{ v.precio }}</span>
-                                            </div>
-                                            <p class="small text-muted m-0">{{ v.descripcion|default:"" }}</p>
-                                            <div class="mt-auto">
-                                                {% if v.archivo_digital %}
-                                                    <a href="{{ v.archivo_digital.url }}" target="_blank" class="btn btn-dark btn-sm w-100">Ver Detalles/Foto</a>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
+                        <div class="tile-body">
+                            <div class="tile-title">{{ p.nombrerecurso }}</div>
+                            <span class="badge-custom badge-info">{{ p.clasificador }}</span>
+                            <div class="tile-description">{{ p.descripcion|default:"" }}</div>
+                            <div class="tile-footer">
+                                {% if p.final_url %}<a href="{{ p.final_url }}" target="_blank" class="tile-btn tile-btn-primary">Ver Archivo</a>{% endif %}
                             </div>
                         </div>
                     </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if productos_laborales %}
+                <div class="section-title" style="margin-top: 2rem;">
+                    <i class="bi bi-briefcase-fill"></i>
+                    Producción Laboral
+                </div>
+                <div class="tiles-grid">
+                    {% for p in productos_laborales %}
+                    <div class="tile">
+                        <div class="tile-image">
+                            {% if p.final_url %}
+                                <a href="{{ p.final_url }}" target="_blank">
+                                    {% if p.is_pdf %}<span class="tile-badge">PDF</span>{% endif %}
+                                    <img src="{{ p.thumbnail }}" alt="Producto Laboral">
+                                </a>
+                            {% else %}
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light); opacity: 0.3;">
+                                    <i class="bi bi-building-gear" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="tile-body">
+                            <div class="tile-title">{{ p.nombreproducto }}</div>
+                            <div class="tile-meta">{{ p.fechaproducto|date:"d M Y" }}</div>
+                            <div class="tile-description">{{ p.descripcion|default:"" }}</div>
+                            <div class="tile-footer">
+                                {% if p.final_url %}<a href="{{ p.final_url }}" target="_blank" class="tile-btn tile-btn-primary">Ver Archivo</a>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Experiencia -->
+            <div id="pills-exp" class="tab-pane">
+                <div class="section-title">
+                    <i class="bi bi-briefcase"></i>
+                    Trayectoria Profesional
+                </div>
+                <div class="exp-timeline">
+                    {% for e in experiencias %}
+                    <div class="exp-item">
+                        <div class="exp-dot"></div>
+                        <div class="exp-title">{{ e.cargodesempenado }}</div>
+                        <div class="exp-company">{{ e.nombrempresa }}</div>
+                        <div class="exp-date">
+                            <i class="bi bi-calendar-event me-1"></i>
+                            {{ e.fechainiciogestion|date:"M Y" }} — {% if e.fechafingestion %}{{ e.fechafingestion|date:"M Y" }}{% else %}<span style="color: #22c55e; font-weight: 700;">Actual</span>{% endif %}
+                        </div>
+                        {% if e.descripcionfunciones %}<div class="exp-description">{{ e.descripcionfunciones|default:"" }}</div>{% endif %}
+                        {% if e.final_url %}
+                        <div style="margin-top: 1rem;">
+                            <a href="{{ e.final_url }}" target="_blank" class="tile-btn tile-btn-primary" style="max-width: 200px;">Ver Certificado</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Formación -->
+            <div id="pills-cursos" class="tab-pane">
+                <div class="section-title">
+                    <i class="bi bi-mortarboard"></i>
+                    Formación y Cursos
+                </div>
+                <div class="tiles-grid">
+                    {% for c in cursos %}
+                    <div class="tile">
+                        <div class="tile-image">
+                            {% if c.final_url %}
+                                <a href="{{ c.final_url }}" target="_blank">
+                                    {% if c.is_pdf %}<span class="tile-badge">PDF</span>{% endif %}
+                                    <img src="{{ c.thumbnail }}" alt="Curso">
+                                </a>
+                            {% else %}
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light); opacity: 0.3;">
+                                    <i class="bi bi-mortarboard" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="tile-body">
+                            <span class="badge-custom badge-info">{{ c.totalhoras }} Horas</span>
+                            <div class="tile-title">{{ c.nombrecurso }}</div>
+                            <div class="tile-meta">{{ c.entidadpatrocinadora }}</div>
+                            <div class="tile-meta">{{ c.fechainicio|date:"M Y" }}</div>
+                            <div class="tile-footer">
+                                {% if c.final_url %}<a href="{{ c.final_url }}" target="_blank" class="tile-btn tile-btn-primary">Ver Certificado</a>{% else %}<button disabled class="tile-btn tile-btn-secondary">Sin Archivo</button>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Logros -->
+            <div id="pills-rec" class="tab-pane">
+                <div class="section-title">
+                    <i class="bi bi-trophy"></i>
+                    Reconocimientos y Logros
+                </div>
+                <div class="tiles-grid">
+                    {% for r in reconocimientos %}
+                    <div class="tile">
+                        <div class="tile-image">
+                            {% if r.final_url %}
+                                <a href="{{ r.final_url }}" target="_blank">
+                                    {% if r.is_pdf %}<span class="tile-badge">PDF</span>{% endif %}
+                                    <img src="{{ r.thumbnail }}" alt="Logro">
+                                </a>
+                            {% else %}
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light); opacity: 0.3;">
+                                    <i class="bi bi-trophy" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="tile-body">
+                            <div class="tile-title">{{ r.tiporeconocimiento }}</div>
+                            <div class="tile-meta">{{ r.entidadpatrocinadora }}</div>
+                            <div class="tile-description">{{ r.descripcionreconocimiento|default:"" }}</div>
+                            <div class="tile-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="tile-meta">{{ r.fechareconocimiento|date:"Y" }}</span>
+                                {% if r.final_url %}<a href="{{ r.final_url }}" target="_blank" class="tile-btn tile-btn-primary" style="width: auto;">Ver</a>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Garage -->
+            <div id="pills-garage" class="tab-pane">
+                <div class="section-title">
+                    <i class="bi bi-shop"></i>
+                    Garage
+                </div>
+                <div class="tiles-grid">
+                    {% for v in ventas_garage %}
+                    <div class="tile">
+                        <div class="tile-image" style="position: relative;">
+                            <span class="tile-badge" style="background: white; color: {% if v.estado == 'Bueno' %}#22c55e{% else %}#f59e0b{% endif %}; border: 2px solid {% if v.estado == 'Bueno' %}#22c55e{% else %}#f59e0b{% endif %};">{{ v.estado }}</span>
+                            {% if v.final_url %}
+                                <a href="{{ v.final_url }}" target="_blank"><img src="{{ v.thumbnail }}" alt="Garage"></a>
+                            {% elif v.imagen %}
+                                <img src="{{ v.imagen }}" alt="Garage">
+                            {% else %}
+                                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light); opacity: 0.3;">
+                                    <i class="bi bi-shop" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="tile-body">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                <div class="tile-title">{{ v.nombreproducto }}</div>
+                                <span style="color: #22c55e; font-weight: 900; font-size: 1.1rem;">${{ v.precio }}</span>
+                            </div>
+                            <div class="tile-description">{{ v.descripcion|default:"" }}</div>
+                            <div class="tile-footer">
+                                {% if v.archivo_digital %}<a href="{{ v.archivo_digital.url }}" target="_blank" class="tile-btn tile-btn-primary">Ver Detalles</a>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 </div>
 
 <!-- Modal Personalización PDF -->
@@ -534,30 +992,30 @@
                 <input type="hidden" name="from_modal" value="true">
                 <div class="modal-body">
                     <p class="text-muted small mb-3">Selecciona las secciones para tu CV:</p>
-                    <div class="d-flex flex-column gap-2">
-                        <div class="form-check p-2 border rounded bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="exp" id="c1" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c1">Experiencia</label>
+                    <div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="exp" id="c1" checked>
+                            <label class="form-check-label fw-bold" for="c1">Experiencia</label>
                         </div>
-                        <div class="form-check p-2 border rounded bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="edu" id="c2" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c2">Formación</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="edu" id="c2" checked>
+                            <label class="form-check-label fw-bold" for="c2">Formación</label>
                         </div>
-                        <div class="form-check p-2 border rounded bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="acad" id="c3" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c3">Productos Académicos</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="acad" id="c3" checked>
+                            <label class="form-check-label fw-bold" for="c3">Productos Académicos</label>
                         </div>
-                        <div class="form-check p-2 border rounded bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="lab" id="c4" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c4">Productos Laborales</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="lab" id="c4" checked>
+                            <label class="form-check-label fw-bold" for="c4">Productos Laborales</label>
                         </div>
-                        <div class="form-check p-2 border rounded bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="rec" id="c5" checked>
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c5">Logros</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="rec" id="c5" checked>
+                            <label class="form-check-label fw-bold" for="c5">Logros</label>
                         </div>
-                        <div class="form-check p-2 border rounded bg-light">
-                            <input class="form-check-input ms-1" type="checkbox" name="garage" id="c6">
-                            <label class="form-check-label fw-bold ms-2 w-100" for="c6">Garage</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="garage" id="c6">
+                            <label class="form-check-label fw-bold" for="c6">Garage</label>
                         </div>
                     </div>
                 </div>
@@ -569,14 +1027,24 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Aplica un suave lift a tiles
-        const tiles = document.querySelectorAll('.tile');
-        if (window.VanillaTilt && tiles.length) {
-            VanillaTilt.init(tiles, { max: 4, speed: 400, glare: true, "max-glare": 0.05 });
-        }
-    });
+    function switchTab(event, tabId) {
+        event.preventDefault();
+        
+        // Ocultar todos los tabs
+        const tabs = document.querySelectorAll('.tab-pane');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        
+        // Remover clase active de todos los botones
+        const buttons = document.querySelectorAll('.nav-tab-item');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        // Mostrar el tab seleccionado
+        document.getElementById(tabId).classList.add('active');
+        
+        // Agregar clase active al botón clickeado
+        event.target.classList.add('active');
+    }
 </script>
+
 {% endblock %}
